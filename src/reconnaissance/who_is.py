@@ -33,9 +33,9 @@ class WhoisHandler:
                 return result
             except Exception as e:
                 logging.error(f"Error processing WHOIS data for {self.url}: {str(e)}")
-                return "Error processing WHOIS data"
+                return "[-] Error processing WHOIS data"
         else:
-            return "No WHOIS data available"
+            return "[-] No WHOIS data available"
 
 
 class CLI:
@@ -52,7 +52,7 @@ class Application:
 
     def run(self):
         data = self.whois_handler.get_whois_data()
-        print(data)
+        print(f"[+] {data}")
 
 
 if __name__ == "__main__":
@@ -63,6 +63,6 @@ if __name__ == "__main__":
         app = Application(args.url)
         app.run()
     except KeyboardInterrupt as ke : 
-        print(f"{ke}")
+        print(f"[-] {ke}")
     except Exception as e : 
-        print(f"{e}")
+        print(f"[-] {e}")

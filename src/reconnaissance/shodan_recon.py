@@ -24,7 +24,7 @@ class ShodanHandler:
             }
         except Exception as e:
             logging.error("Error occurred in getHostInfo: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
     def getOpenPorts(self, ip_addr):
         try:
@@ -36,7 +36,7 @@ class ShodanHandler:
             }
         except Exception as e:
             logging.error("Error occurred in getOpenPorts: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
     def searchVuln(self, query, limit=10):
         try:
@@ -50,7 +50,7 @@ class ShodanHandler:
             ]
         except Exception as e:
             logging.error("Error occurred in searchVuln: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
     def getDomainInfo(self, domain):
         try:
@@ -62,7 +62,7 @@ class ShodanHandler:
             }
         except Exception as e:
             logging.error("Error occurred in getDomainInfo: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
     def findDevices(self, device_query, limit=10):
         try:
@@ -75,7 +75,7 @@ class ShodanHandler:
             ]
         except Exception as e:
             logging.error("Error occurred in findDevices: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
     def getGeolocation(self, ip_addr):
         try:
@@ -88,7 +88,7 @@ class ShodanHandler:
             }
         except Exception as e:
             logging.error("Error occurred in getGeolocation: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
     def getAccountStatus(self):
         try:
@@ -100,7 +100,7 @@ class ShodanHandler:
             }
         except Exception as e:
             logging.error("Error occurred in getAccountStatus: {}".format(str(e)))
-            return {"error": str(e)}
+            return {"[-] error": str(e)}
 
 class CLI: 
     @staticmethod
@@ -120,46 +120,51 @@ class Application:
 
     def HI(self, ip): 
         result = self.shodan_handler.getHostInfo(ip)
-        print(f"Host info: {result}")
+        print(f"[+] Host info: {result}")
 
     def OP(self, ip):
         result = self.shodan_handler.getOpenPorts(ip)
-        print(f"Open Ports: {result}")
+        print(f"[+] Open Ports: {result}")
 
     def SV(self, query, limit=10):
         result = self.shodan_handler.searchVuln(query, limit)
-        print(f"Searched vulnerabilities: {result}")
+        print(f"[+] Searched vulnerabilities: {result}")
 
     def DI(self, domain):
         result = self.shodan_handler.getDomainInfo(domain)
-        print(f"Domain info: {result}")
+        print(f"[+] Domain info: {result}")
 
     def FD(self, device_query, limit=10):
         result = self.shodan_handler.findDevices(device_query, limit)
-        print(f"Devices found: {result}")
+        print(f"[+] Devices found: {result}")
     
     def GL(self, ip):
         result = self.shodan_handler.getGeolocation(ip)
-        print(f"Geolocation: {result}")
+        print(f"[+] Geolocation: {result}")
 
     def AS(self):
         result = self.shodan_handler.getAccountStatus()
-        print(f"Account status: {result}")
+        print(f"[+] Account status: {result}")
 
 if __name__ == "__main__":
-    Logger.setup_logger()
-    load_dotenv()
-    API_KEY = os.getenv("shodan_api_key")
-    if not API_KEY: 
-        logging.error("API key not found in .env variables!")
-        exit("API key missing!")
-    cli = CLI()
-    args = cli.parse_arguments()
-    app = Application(API_KEY)
-    app.HI(args.ip_addr)
-    app.OP(args.ip_addr)
-    app.SV(args.query)
-    app.DI(args.domain)
-    app.FD(args.device_query)
-    app.GL(args.ip_addr)
-    app.AS()
+    try: 
+        Logger.setup_logger()
+        load_dotenv()
+        API_KEY = os.getenv("shodan_api_key")
+        if not API_KEY: 
+           logging.error("[-] API key not found in .env variables!")
+           exit("API key missing!")
+        cli = CLI()
+        args = cli.parse_arguments()
+        app = Application(API_KEY)
+        app.HI(args.ip_addr)
+        app.OP(args.ip_addr)
+        app.SV(args.query)
+        app.DI(args.domain)
+        app.FD(args.device_query)
+        app.GL(args.ip_addr)
+        app.AS()   	
+    except KeyboardInterrupt as ke: 
+        print(f"[i] {ke}") 
+    except Exception as e:
+        print(f"[-] error : {e}")
