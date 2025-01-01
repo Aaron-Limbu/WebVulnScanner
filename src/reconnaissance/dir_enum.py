@@ -7,12 +7,56 @@ from concurrent.futures import ThreadPoolExecutor
 
 class Logger:
     @staticmethod
-    def setup_logger(log_filename="dir_enum.log"):
+    def setup_logger(log_filename="dir_enum_vuln_scan.log"):
         logging.basicConfig(
             filename=log_filename,
             level=logging.INFO,
             format="%(asctime)s - %(levelname)s - %(message)s"
         )
+
+
+class VulnerabilityScan:
+    @staticmethod
+    def check_headers(url):
+        """Check for insecure headers."""
+        try:
+            response = requests.get(url, timeout=5)
+            headers = response.headers
+
+            if "Server" in headers:
+                server = headers["Server"]
+                print(f"[i] Server Header: {server}")
+                logging.info(f"Server Header: {server}")
+
+                if "Apache/2.4.49" in server or "Apache/2.4.50" in server:
+                    print("[!] Vulnerable Apache version detected")
+                    logging.warning(f"Vulnerable Apache version detected: {server}")
+
+            if "X-Powered-By" in headers:
+                x_powered_by = headers["X-Powered-By"]
+                print(f"[i] X-Powered-By Header: {x_powered_by}")
+                logging.info(f"X-Powered-By Header: {x_powered_by}")
+        except requests.exceptions.RequestException as e:
+            print(f"[-] Failed to fetch headers for {url}: {e}")
+            logging.error(f"Failed to fetch headers for {url}: {e}")
+
+    @staticmethod
+    def scan_common_vulnerabilities(url):
+        """Check for common vulnerabilities."""
+        endpoints = ["/admin", "/.git", "/config", "/backup", "/.env", "/wp-config.php"]
+        for endpoint in endpoints:
+            vuln_url = f"{url}{endpoint}"
+            try:
+                response = requests.get(vuln_url, timeout=5)
+                if response.status_code == 200:
+                    print(f"[!] Potentially sensitive endpoint found: {vuln_url}")
+                    logging.warning(f"Potentially sensitive endpoint found: {vuln_url}")
+                elif response.status_code == 403:
+                    print(f"[i] Restricted endpoint: {vuln_url}")
+                    logging.info(f"Restricted endpoint: {vuln_url}")
+            except requests.exceptions.RequestException as e:
+                print(f"[-] Failed to check endpoint {vuln_url}: {e}")
+                logging.error(f"Failed to check endpoint {vuln_url}: {e}")
 
 
 class DirectoryEnum:
@@ -30,6 +74,9 @@ class DirectoryEnum:
                 print(f"[+] Found directory: {t_url}")
                 self.found_dir.append(t_url)
                 logging.info(f"Found directory: {t_url}")
+                
+                # Perform vulnerability checks on discovered directories
+                VulnerabilityScan.scan_common_vulnerabilities(t_url)
             elif req.status_code in [403, 404]:
                 print(f"[-] Target restricted or not found: {t_url}")
                 logging.info(f"Target restricted or not found: {t_url}")
@@ -65,12 +112,15 @@ class Application:
 
     def run(self):
         self.de.enum()
+        
+        # Perform additional vulnerability scans
+        VulnerabilityScan.check_headers(self.de.url)
 
 
 class CLI:
     @staticmethod
     def argument_parse():
-        parser = argparse.ArgumentParser(description="Directory enumeration")
+        parser = argparse.ArgumentParser(description="Directory enumeration with vulnerability scanning")
         parser.add_argument("-w", "--wordlist", type=str, required=True, help="Wordlist location")
         parser.add_argument("-u", "--url", type=str, required=True, help="Website URL")
         parser.add_argument("-t", "--threads", type=int, default=10, help="Number of threads")

@@ -1,19 +1,23 @@
-from shodan import Shodan
 import os
 import logging
+import json
 from dotenv import load_dotenv
+from shodan import Shodan
 import argparse
 
-class Logger: 
-    @staticmethod 
+
+class Logger:
+    @staticmethod
     def setup_logger(log_file="shodan.log"):
-        logging.basicConfig(filename=log_file, level=logging.INFO)
+        logging.basicConfig(filename=log_file, level=logging.INFO, 
+                            format="%(asctime)s - %(levelname)s - %(message)s")
+
 
 class ShodanHandler:
     def __init__(self, api_key):
         self.api = Shodan(api_key)
 
-    def getHostInfo(self, ip_addr):
+    def get_host_info(self, ip_addr):
         try:
             host = self.api.host(ip_addr)
             return {
@@ -23,10 +27,10 @@ class ShodanHandler:
                 'Ports': host['ports']
             }
         except Exception as e:
-            logging.error("Error occurred in getHostInfo: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in get_host_info: {e}")
+            return {"error": str(e)}
 
-    def getOpenPorts(self, ip_addr):
+    def get_open_ports(self, ip_addr):
         try:
             host = self.api.host(ip_addr)
             return {
@@ -35,10 +39,10 @@ class ShodanHandler:
                 for port in [service.get('port')]
             }
         except Exception as e:
-            logging.error("Error occurred in getOpenPorts: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in get_open_ports: {e}")
+            return {"error": str(e)}
 
-    def searchVuln(self, query, limit=10):
+    def search_vulns(self, query, limit=10):
         try:
             results = self.api.search(query)
             return [
@@ -49,10 +53,10 @@ class ShodanHandler:
                 } for result in results['matches'][:limit]
             ]
         except Exception as e:
-            logging.error("Error occurred in searchVuln: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in search_vulns: {e}")
+            return {"error": str(e)}
 
-    def getDomainInfo(self, domain):
+    def get_domain_info(self, domain):
         try:
             domain_info = self.api.dns.domain_info(domain)
             return {
@@ -61,10 +65,10 @@ class ShodanHandler:
                 'IPs': domain_info.get('ips', [])
             }
         except Exception as e:
-            logging.error("Error occurred in getDomainInfo: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in get_domain_info: {e}")
+            return {"error": str(e)}
 
-    def findDevices(self, device_query, limit=10):
+    def find_devices(self, device_query, limit=10):
         try:
             results = self.api.search(device_query)
             return [
@@ -74,10 +78,10 @@ class ShodanHandler:
                 } for match in results['matches'][:limit]
             ]
         except Exception as e:
-            logging.error("Error occurred in findDevices: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in find_devices: {e}")
+            return {"error": str(e)}
 
-    def getGeolocation(self, ip_addr):
+    def get_geolocation(self, ip_addr):
         try:
             host = self.api.host(ip_addr)
             return {
@@ -87,10 +91,10 @@ class ShodanHandler:
                 'Country': host.get('country_name', 'N/A')
             }
         except Exception as e:
-            logging.error("Error occurred in getGeolocation: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in get_geolocation: {e}")
+            return {"error": str(e)}
 
-    def getAccountStatus(self):
+    def get_account_status(self):
         try:
             account_info = self.api.info()
             return {
@@ -99,72 +103,61 @@ class ShodanHandler:
                 'Plan': account_info['plan']
             }
         except Exception as e:
-            logging.error("Error occurred in getAccountStatus: {}".format(str(e)))
-            return {"[-] error": str(e)}
+            logging.error(f"Error in get_account_status: {e}")
+            return {"error": str(e)}
 
-class CLI: 
-    @staticmethod
-    def parse_arguments():
-        parser = argparse.ArgumentParser(prog='Shodan Recon', description='Recon tool using Shodan API')
-        parser.add_argument('-i', '--ip_addr', type=str, required=True, help='Target IP address')
-        parser.add_argument('-u', '--url', type=str, help='Target URL')
-        parser.add_argument('-d', '--domain', type=str, help='Target domain name')
-        parser.add_argument('-dq', '--device_query', type=str, help='Device search query')
-        parser.add_argument('-q', '--query', type=str, help='Shodan search query')
-        args = parser.parse_args()
-        return args
 
-class Application: 
-    def __init__(self, api_key):
-        self.shodan_handler = ShodanHandler(api_key)
+def parse_arguments():
+    parser = argparse.ArgumentParser(prog='Shodan Recon', description='Recon tool using Shodan API')
+    parser.add_argument('-i', '--ip_addr', type=str, help='Target IP address')
+    parser.add_argument('-d', '--domain', type=str, help='Target domain name')
+    parser.add_argument('-q', '--query', type=str, help='Shodan search query')
+    parser.add_argument('-dq', '--device_query', type=str, help='Device search query')
+    parser.add_argument('-s', '--status', action='store_true', help='Get Shodan account status')
+    return parser.parse_args()
 
-    def HI(self, ip): 
-        result = self.shodan_handler.getHostInfo(ip)
-        print(f"[+] Host info: {result}")
 
-    def OP(self, ip):
-        result = self.shodan_handler.getOpenPorts(ip)
-        print(f"[+] Open Ports: {result}")
-
-    def SV(self, query, limit=10):
-        result = self.shodan_handler.searchVuln(query, limit)
-        print(f"[+] Searched vulnerabilities: {result}")
-
-    def DI(self, domain):
-        result = self.shodan_handler.getDomainInfo(domain)
-        print(f"[+] Domain info: {result}")
-
-    def FD(self, device_query, limit=10):
-        result = self.shodan_handler.findDevices(device_query, limit)
-        print(f"[+] Devices found: {result}")
-    
-    def GL(self, ip):
-        result = self.shodan_handler.getGeolocation(ip)
-        print(f"[+] Geolocation: {result}")
-
-    def AS(self):
-        result = self.shodan_handler.getAccountStatus()
-        print(f"[+] Account status: {result}")
-
-if __name__ == "__main__":
-    try: 
+def main():
+    try:
         Logger.setup_logger()
         load_dotenv()
-        API_KEY = os.getenv("shodan_api_key")
-        if not API_KEY: 
-           logging.error("[-] API key not found in .env variables!")
-           exit("API key missing!")
-        cli = CLI()
-        args = cli.parse_arguments()
-        app = Application(API_KEY)
-        app.HI(args.ip_addr)
-        app.OP(args.ip_addr)
-        app.SV(args.query)
-        app.DI(args.domain)
-        app.FD(args.device_query)
-        app.GL(args.ip_addr)
-        app.AS()   	
-    except KeyboardInterrupt as ke: 
-        print(f"[i] {ke}") 
+
+        API_KEY = os.getenv("SHODAN_API_KEY")
+        if not API_KEY:
+            logging.error("API key not found in environment variables!")
+            exit("Error: API key missing. Check your .env file.")
+
+        shodan_handler = ShodanHandler(API_KEY)
+        args = parse_arguments()
+
+        if args.ip_addr:
+            print("[+] Host Information:")
+            print(json.dumps(shodan_handler.get_host_info(args.ip_addr), indent=4))
+            print("\n[+] Open Ports:")
+            print(json.dumps(shodan_handler.get_open_ports(args.ip_addr), indent=4))
+
+        if args.domain:
+            print("\n[+] Domain Information:")
+            print(json.dumps(shodan_handler.get_domain_info(args.domain), indent=4))
+
+        if args.query:
+            print("\n[+] Vulnerability Search Results:")
+            print(json.dumps(shodan_handler.search_vulns(args.query), indent=4))
+
+        if args.device_query:
+            print("\n[+] Device Search Results:")
+            print(json.dumps(shodan_handler.find_devices(args.device_query), indent=4))
+
+        if args.status:
+            print("\n[+] Account Status:")
+            print(json.dumps(shodan_handler.get_account_status(), indent=4))
+
+    except KeyboardInterrupt:
+        print("\n[!] Script interrupted by user.")
     except Exception as e:
-        print(f"[-] error : {e}")
+        logging.error(f"Unexpected error: {e}")
+        print(f"[-] An error occurred: {e}")
+
+
+if __name__ == "__main__":
+    main()
