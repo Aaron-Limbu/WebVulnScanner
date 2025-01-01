@@ -1,3 +1,11 @@
 shodan 
 whois
-request
+requests
+socket
+dnspython
+ssl
+nmap 
+dotenv
+json
+urlparse
+
