@@ -19,7 +19,6 @@ class HTTPHeaderAnalysis:
             for header, value in headers.items():
                 print(f"    {header}: {value}")
 
-            # Security-related header checks
             print("\n[+] Security Header Analysis:")
             security_headers = {
                 "Content-Security-Policy": "Protects against XSS attacks",
@@ -53,7 +52,6 @@ class SSLAnalysis:
                 with context.wrap_socket(sock, server_hostname=self.hostname) as ssock:
                     cert = ssock.getpeercert()
 
-                    # Extract and display certificate details
                     print("\n[+] SSL Certificate Details:")
                     print(f"    Subject: {cert.get('subject')}")
                     print(f"    Issuer: {cert.get('issuer')}")
@@ -62,7 +60,6 @@ class SSLAnalysis:
                     print(f"    Valid From: {valid_from}")
                     print(f"    Valid To: {valid_to}")
 
-                    # Check expiration
                     if valid_to < datetime.utcnow():
                         print("    [-] Certificate has expired!")
                     else:
