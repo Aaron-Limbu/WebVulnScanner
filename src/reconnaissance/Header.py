@@ -4,7 +4,6 @@ import requests
 import argparse
 from datetime import datetime
 
-
 class HTTPHeaderAnalysis:
     def __init__(self, url):
         self.url = url
