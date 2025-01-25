@@ -39,9 +39,10 @@ class NmapHandler:
                     print(f"[i] Protocol: {protocol}")
                     ports = self.scanner[host][protocol].keys()
                     for port in ports:
+                        portname = self.scanner[host][protocol][port]['name']
                         state = self.scanner[host][protocol][port]['state']
                         service = self.scanner[host][protocol][port].get('product', 'N/A')
-                        print(f"  Port: {port}, State: {state}, Service: {service}")
+                        print(f"  Port: {port} ({portname}), State: {state}, Service: {service}")
 
                 if 'osmatch' in self.scanner[host]:
                     for os in self.scanner[host]['osmatch']:
@@ -68,7 +69,7 @@ class CLI:
         parser = argparse.ArgumentParser(description="Network port scanning with Nmap")
         parser.add_argument("-ip", "--ipaddr", type=str, help="IP address of device or network", required=True)
         parser.add_argument("-p", "--ports", type=str, help="Ports for scanning (e.g., 20-80). Default scans major ports", default="20-80")
-        parser.add_argument("-a", "--arguments", type=str, help="Arguments for scanning (e.g., '-sS -O'). Use quotes for multiple arguments.", default="-sS")
+        parser.add_argument("-a", "--arguments", type=str, help="Arguments for scanning (e.g., '-sS -O'). Use quotes for multiple arguments.", default="-sS -sV")
         parser.add_argument("-s", "--script", type=str, help="Nmap script to use during scanning (e.g., 'http-title')", default=None)
         return parser.parse_args()
 
