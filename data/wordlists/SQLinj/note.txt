@@ -1,0 +1,1 @@
+This payload was taken from İsmail Taşdelen payloadbox/sql-injection-payload-list repository

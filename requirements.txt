@@ -8,4 +8,6 @@ nmap
 dotenv
 json
 urlparse
+colorama
+re
 
