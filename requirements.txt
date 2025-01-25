@@ -10,4 +10,5 @@ json
 urlparse
 colorama
 re
-
+BeautifulSoup
+urllib.parse
