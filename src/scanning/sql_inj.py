@@ -3,6 +3,7 @@ import argparse
 import random
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs, urlencode, urljoin, quote
+from statistics import mean
 import os
 import glob
 import pyfiglet
@@ -86,7 +87,7 @@ class SQLScanner:
             print(f"[+] No query parameters found in the URL: {self.url}")
             return False
 
-        print(f"[i] Testing query parameters for SQL injection vulnerabilities... \n")
+        print(f"[i] Testing query parameters for SQL injection vulnerabilities... ")
 
         for param, values in query_params.items():
             for payload in payloads:
@@ -144,13 +145,25 @@ class SQLScanner:
         for form in forms:
             action = form.get("action") or self.url
             form_url = urljoin(self.url, action)
+            method = form.get("method", "get").lower()  # Default to GET if not specified
             inputs = form.find_all("input")
 
             for payload in payloads:
                 data = {inp.get("name"): payload for inp in inputs if inp.get("name")}
-                print(f"[i] Testing form action: {form_url} with payload: {payload}")
+
                 try:
-                    response = requests.post(form_url, data=data, headers=self.headers, timeout=5)
+                    if method == "get":
+                        response = requests.get(form_url, params=data, headers=self.headers, timeout=5)
+                    elif method == "post":
+                        response = requests.post(form_url, data=data, headers=self.headers, timeout=5)
+                    else:
+                        print(f"[!] Unsupported form method: {method}")
+                        continue
+
+                    if response.status_code in [400, 403, 404, 502, 503, 505]:
+                        print(f"[!] HTTP Error {response.status_code} after sending: {form_url}")
+                        continue
+
                     if any(error in response.text for error in self.sql_errors):
                         print(f"[!] SQL Injection Vulnerability Found!")
                         print(f"    Form URL: {form_url}")
@@ -160,22 +173,39 @@ class SQLScanner:
                     print(f"[-] Error submitting form: {e}")
         return False
 
-    def test_timing_based_injection(self, payloads):
-        try:
+    def test_timing_based_injection(self, payloads, baseline_requests=3, threshold_multiplier=3):
+    
+    	try:
+        	baseline_times = []
+        	for _ in range(baseline_requests):
+            		response = requests.get(self.url, headers=self.headers, timeout=10)
+            		baseline_times.append(response.elapsed.total_seconds())
 
-            for payload in payloads:
-                timing_payload = payload.replace("'", " AND SLEEP(5)-- ")
-                encoded_payload = quote(timing_payload)
-                full_url = f"{self.url}?{encoded_payload}"
+        	baseline_avg = mean(baseline_times)
+        	threshold_time = baseline_avg * threshold_multiplier
+        	print(f"[i] Baseline response time: {baseline_avg:.2f}s, Threshold: {threshold_time:.2f}s")
 
-                response = requests.get(full_url, headers=self.headers, timeout=10)
-                if response.elapsed.total_seconds() > 4:
-                    print(f"[!] Timing-Based SQL Injection Vulnerability Found!")
-                    print(f"    URL: {full_url}")
-                    return True
-        except requests.RequestException as e:
-            print(f"[-] Error testing timing-based injection: {e}")
-        return False
+        	for payload in payloads:
+            		timing_payload = payload.replace("'", " AND SLEEP(5)-- ")  
+            		encoded_payload = quote(timing_payload)
+            		full_url = f"{self.url}?{encoded_payload}"
+
+            		try:
+                		response = requests.get(full_url, headers=self.headers, timeout=10)
+                		elapsed_time = response.elapsed.total_seconds()
+
+                		if elapsed_time > threshold_time:
+                    			print(f"[!] Timing-Based SQL Injection Vulnerability Found!")
+                    			print(f"    URL: {full_url}")
+                    			print(f"    Response Time: {elapsed_time:.2f}s")
+                    			return True
+            		except requests.RequestException as e:
+                		print(f"[-] Error during request to {full_url}: {e}")
+
+        	print("[INFO] No timing-based SQL injection vulnerabilities detected.")
+    	except requests.RequestException as e:
+        	print(f"[-] Error testing timing-based injection: {e}")
+    	return False
 
     def test_union_based_injection(self,payloads):
         parsed_url = urlparse(self.url)
@@ -212,32 +242,32 @@ class SQLScanner:
        
 
         if self.method == "q":
-            print(f"[+] Detecting Backend of the Website \n")
-            print(f"[i] Performing Generic Error Based Detection\n")
+            print(f"[+] Detecting Backend of the Website ")
+            print(f"[i] Performing Generic Error Based Detection")
             query_vuln = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_ErrorBased.txt"))
-            print(f"[i] Performing Generic SQLI injection \n")
+            print(f"[i] Performing Generic SQLI injection ")
             query_vuln2 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_SQLI.txt"))
-            print(f"[i] Performing MSSQL injection \n")
+            print(f"[i] Performing MSSQL injection ")
             msql = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/MSSQL/MSSQL.txt"))
-            print(f"[i] Performing MSSQL blind injection \n")
+            print(f"[i] Performing MSSQL blind injection ")
             msql2 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/MSSQL/MSSQL_blind.txt"))
             msql3 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MSSQL/payloads-sql-blind-MSSQL-INSERT.txt"))
             msql4 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MSSQL/payloads-sql-blind-MSSQL-WHERE.txt"))
-            print(f"[i] Performing MySQL injection \n")
+            print(f"[i] Performing MySQL injection ")
             mys = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/MySQL/MySQL.txt"))
-            print(f"[i] Performing MySQL blind injection \n")
+            print(f"[i] Performing MySQL blind injection ")
             mys2 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MySQL/payloads-sql-blind-MySQL-INSERT.txt"))
             mys3 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MySQL/payloads-sql-blind-MySQL-ORDER_BY.txt"))
             mys4 = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MySQL/payloads-sql-blind-MySQL-WHERE.txt"))
-            print(f"[i] Performing MySQL and MSSQL injection \n")
+            print(f"[i] Performing MySQL and MSSQL injection ")
             mysb = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/MySQL/MySQL_MSSQL.txt"))
-            print(f"[i] Performing NoSQL injection \n")
+            print(f"[i] Performing NoSQL injection ")
             nql = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/NoSQL/no-sql.txt"))
-            print(f"[i] Performing Oracle injection \n")
+            print(f"[i] Performing Oracle injection ")
             orcl = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/Oracle/oracle.txt"))
-            print(f"[i] Performing xPlatform injection \n")
+            print(f"[i] Performing xPlatform injection ")
             xp = self.test_query_params(self.load_payloads("../../data/wordlists/SQLinj/detect/xPlatform/xplatform.txt"))
-            print(f"[i] Performing Generic Time based injection \n")
+            print(f"[i] Performing Generic Time based injection ")
             t_t= self.test_timing_based_injection(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_TimeBased.txt"))
             print(f"[i] Performing Generic Union Select injection")
             t_u= self.test_union_based_injection(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_UnionSelect.txt"))
@@ -250,36 +280,36 @@ class SQLScanner:
             else:
                 print(f"[-] No vulnerability found on: {self.url} \n")
         elif self.method == "f":
-            print(f"[+] Detecting Backend of the website \n")
-            print(f"[i] Perfomring Generic Error Based Detection\n")
+            print(f"[+] Detecting Backend of the website ")
+            print(f"[i] Perfomring Generic Error Based Detection")
             form_vuln = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_ErrorBased.txt"))
-            print(f"[i] Performing Gnereic SQLI injection\n")
+            print(f"[i] Performing Gnereic SQLI injection")
             form_vuln2 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_SQLI.txt"))
-            print(f"[i] Performing MSSQL injection \n")
+            print(f"[i] Performing MSSQL injection")
             form_vuln3 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/MSSQL/MSSQL.txt"))
-            print(f"[i] Performing MSSQL blind injection\n")
+            print(f"[i] Performing MSSQL blind injection")
             form_vuln4 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/MSSQL/MSSQL_blind.txt"))
-            form_vuln4_1 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/payloads-sql-blind-MSSQL-INSERT.txt"))
-            form_vuln4_2 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/payloads-sql-blind-MSSQL-WHERE.txt"))
-            print(f"[i] Performing MySQL injection\n")
+            form_vuln4_1 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MSSQL/payloads-sql-blind-MSSQL-INSERT.txt"))
+            form_vuln4_2 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MSSQL/payloads-sql-blind-MSSQL-WHERE.txt"))
+            print(f"[i] Performing MySQL injection")
             form_vuln5 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/MySQL/MySQL.txt"))
-            print(f"[i] Performing MySQL blind injection\n")
-            form_vuln5_1 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/payloads-sql-blind-MySQL-INSERT.txt"))
-            form_vuln5_2 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/payloads-sql-blind-MySQL-ORDER_BY.txt"))
-            form_vuln5_3 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/payloads-sql-blind-MySQL-WHERE.txt"))
-            print(f"[i] Performing MySQL and MSSQL injection \n")
-            form_vuln6 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/MSSQL/MSSQL_MSSQL.txt"))
-            print(f"[i] Performing NoSQL injection\n")
+            print(f"[i] Performing MySQL blind injection")
+            form_vuln5_1 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MySQL/payloads-sql-blind-MySQL-INSERT.txt"))
+            form_vuln5_2 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MySQL/payloads-sql-blind-MySQL-ORDER_BY.txt"))
+            form_vuln5_3 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/payloads-sql-blind/MySQL/payloads-sql-blind-MySQL-WHERE.txt"))
+            print(f"[i] Performing MySQL and MSSQL injection ")
+            form_vuln6 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/MySQL/MySQL_MSSQL.txt"))
+            print(f"[i] Performing NoSQL injection")
             form_vuln7 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/NoSQL/no-sql.txt"))
-            print(f"[i] Performing Oracle injection\n")
+            print(f"[i] Performing Oracle injection")
             form_vuln8 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/Oracle/oracle.txt"))
-            print(f"[i] Performing xPlatform injection \n")
-            form_vuln9 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/xplatform.txt"))
-            print(f"[i] Performing Generic Time Based injection\n")
+            print(f"[i] Performing xPlatform injection ")
+            form_vuln9 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/xPlatform/xplatform.txt"))
+            print(f"[i] Performing Generic Time Based injection")
             form_vuln10 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_TimeBased.txt"))
-            print(f"[i] Performing Generic Union Select injection\n")
+            print(f"[i] Performing Generic Union Select injection")
             form_vuln11 = self.test_forms(self.load_payloads("../../data/wordlists/SQLinj/detect/Generic_UnionSelect.txt"))
-            print(f"[i] Performing Generic OOB SQL injection\n")
+            print(f"[i] Performing Generic OOB SQL injection")
             form_vuln12 = self.test_forms(self.oob_payloads)
 
             if form_vuln or form_vuln2 or form_vuln3 or form_vuln4 or form_vuln5 or form_vuln6 or form_vuln7 or form_vuln8 or form_vuln9 or form_vuln10 or form_vuln11 or form_vuln4_1 or form_vuln4_2 or form_vuln5_1 or form_vuln5_2 or form_vuln5_3:
