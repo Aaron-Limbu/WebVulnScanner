@@ -12,6 +12,7 @@ class SQLScanner:
     def __init__(self, url, userAgent, sql_errors, method,cookie):
         self.url = url
         self.sql_errors = sql_errors
+    
         self.method = method
         self.cookie = cookie
         self.headers = {
@@ -114,12 +115,13 @@ class SQLScanner:
                         print(f"[!] Website is unreachable or unavailable after sending: {full_url}")
                         exit(1)
 
-                    if any(error in response.text for error in self.sql_errors) or response.status_code == 400:
-                        print(f"[!] SQL Injection Vulnerability Found!")
-                        print(f"    URL: {full_url}")
-                        print(f"    Payload: {payload}")    
-                        return True
-                        exit(1)
+                    for db,errors in self.sql_errors.items(): 
+                        if any(error in response.text for error in errors) or response.status_code == 400:
+                            print(f"[!] SQL Injection Vulnerability Found!")
+                            print(f"    URL: {full_url}")
+                            print(f"    Payload: {payload}")    
+                            return True
+                            exit(1)
 
                 except requests.RequestException as e:
                     print(f"[-] Error making request: {e}")
@@ -163,12 +165,13 @@ class SQLScanner:
                     if response.status_code in [400, 403, 404, 502, 503, 505]:
                         print(f"[!] HTTP Error {response.status_code} after sending: {form_url}")
                         continue
-
-                    if any(error in response.text for error in self.sql_errors):
-                        print(f"[!] SQL Injection Vulnerability Found!")
-                        print(f"    Form URL: {form_url}")
-                        print(f"    Payload: {payload}")
-                        return True
+                    for db,errors in self.sql_errors.items(): 
+                        if any(error in response.text for error in errors):
+                            print(f"[!] SQL Injection Vulnerability Found!"i)
+                            print(f"    Form URL: {form_url}")
+                            print(f"    Payload: {payload}")
+                            print(f"[i] Database: {db}")
+                            return True
                 except requests.RequestException as e:
                     print(f"[-] Error submitting form: {e}")
         return False
@@ -218,9 +221,11 @@ class SQLScanner:
                 modified_query = urlencode(modified_params, doseq=True)
                 full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
                 response = requests.get(full_url, headers=self.headers)
-                if any(error in response.text for error in self.sql_errors):
-                    print(f"[!] Possible UNION-based SQL Injection detected in parameter: {param} with payload: {payload}")
-                    return True
+                for db,errors in self.sql_errors.items(): 
+                    if any(error in response.text for error in errors):
+                        print(f"[!] Possible UNION-based SQL Injection detected in parameter: {param} with payload: {payload}")
+                        print(f"[i] Database : {db}" )
+                        return True
 
     def test_oob_sql_injection(self,payloads):
         parsed_url = urlparse(self.url)
@@ -233,12 +238,58 @@ class SQLScanner:
                 modified_query = urlencode(modified_params, doseq=True)
                 full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
                 response = requests.get(full_url, headers=self.headers)
+                for db,errors in self.sql_errors.items(): 
+                    if any(error in response.text for error in errors):
+                        print(f"[!] Possible OOB SQL Injection detected in parameter: {param} with payload: {payload}")
+                        print(f"[i] Database : {db}")
+                        return True
 
-                if any(error in response.text for error in self.sql_errors):
-                    print(f"[!] Possible OOB SQL Injection detected in parameter: {param} with payload: {payload}")
-                    return True
+    def version_detection(db,payloads): 
+        parsed_url = urlparse(self.url)
+        query_params = parse_qs(parsed_url.query)
+        version_pattern = r"([0-9]+(?:\.[0-9]+)+))"
+        for param in query_params:
+            for payload in payloads : 
+                modified_params = query_params.copy()
+                modified_params[param] = payload
+                modified_query = urlencode(modified_params,doseq=True)
+                full_url =f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
+                response = request.get(full_url,header=self.headers)
+                if response.status_code in [400, 403, 404, 502, 503, 505]:
+                    print(f"[!] payload was sent but connection failed after it.")
+                if response.status_code == 200: 
+                    clean_text = BeautifulSoup(response.text,"html.parser").get_text()
+                    match = re.findall(r"[a-zA-Z0-9_.@",clean_text)
+                    if match: 
+                        print(f"[i] Database version: {db}{match.group(1)}")
+                    else: 
+                        print(f"[-] Database version not found in response")
 
-    def run(self):
+    def db_info(db,payloads):
+        parsed_url =urlparse(self.url)
+        query_params = parse_qs(parsed_url.query)
+        for param in query_params: 
+            for payload in payloads: 
+                modified_params = query_params.copy()
+                modified_params[param] = payload
+                modified_query = urlencode(modified_params,doseq=True)
+                full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
+                response = request.get(full_url,header=self.headers)
+                baseline_response = request.get(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_params}",header=self.headers)
+                baseline_text = BeautifulSoup(baseline_response.text,"html.parser").get_text()
+                clean_text = BeautifulSoup(response.text,"html.parser").get_text()
+                if response.status_code in [400, 403, 404, 502, 503, 505]:
+                    print(f"[!] payload was sent but connection failed after it")
+                if response.status_code == 200: 
+                    if clean_text != baseline_response:
+                        matches = re.findall(r"[a-zA-Z0-9_.@]+",clean_text)
+                        filtered_matches = [match for match in matches if len(match)<30 and not any(char in match for char in "<>/=\"")]
+                        print(f"[+] Potential matches: {filtered_matches}\n")
+
+    //def tables_infor(): 
+        
+
+    //def run(self):
        
 
         if self.method == "q":
@@ -344,9 +395,64 @@ if __name__ == "__main__":
             "SQL syntax", "mysql_fetch", "You have an error in your SQL syntax;",
             "Warning: mysql", "ORA-", "syntax error", "unclosed quotation mark"
         ]
+        db_errors = {
+        "MySQL": [
+            "You have an error in your SQL syntax",
+            "MySQL server version for the right syntax to use",
+            "Warning: mysql_fetch_array()",
+            "Warning: mysql_num_rows()",
+            "supplied argument is not a valid MySQL result resource",
+            "MySQL result index",
+            "MySQL server has gone away",
+            "Error: query failed",
+            "Error: invalid SQL statement",
+        ],
+        "MSSQL": [
+            "Microsoft SQL Native Client error",
+            "Unclosed quotation mark after the character string",
+            "Incorrect syntax near",
+            "Warning: mssql_query()",
+            "Warning: mssql_fetch()",
+            "SQL Server driver",
+            "Cannot insert duplicate key row",
+            "Arithmetic overflow error",
+            "Conversion failed when converting",
+        ],
+        "NoSQL": [
+            "MongoError",
+            "Command failed with error",
+            "Unrecognized pipeline stage name",
+            "BSONObj size must be between",
+            "Error processing query",
+            "Couchbase error",
+            "Document not found",
+            "Invalid query or key",
+        ],
+        "Oracle": [
+            "ORA-00933: SQL command not properly ended",
+            "ORA-01756: quoted string not properly terminated",
+            "ORA-00936: missing expression",
+            "Warning: oci_execute()",
+            "ORA-01722: invalid number",
+            "ORA-06550: line",
+            "PLS-00103: Encountered the symbol",
+            "ORA-00942: table or view does not exist",
+        ],
+        "Cross-Platform": [
+            "SQL syntax error",
+            "Warning: SQL",
+            "Warning: PDO",
+            "Prepared statement needs to be re-prepared",
+            "General error: invalid SQL",
+            "Division by zero in query",
+            "Syntax error in query expression",
+            "Database disk image is malformed",
+            "Unknown column in field list",
+         ],
+        }
 
         cli_args = CLI.parse_arguments()
-        scanner = SQLScanner(cli_args.url, cli_args.user_agent, sql_errors, cli_args.method,cli_args.cookie)
+        scanner = SQLScanner(cli_args.url, cli_args.user_agent, db_errors , cli_args.method,cli_args.cookie)
         scanner.run()
 
     except KeyboardInterrupt:
