@@ -12,3 +12,7 @@ colorama
 re
 BeautifulSoup
 urllib.parse
+Queue
+threading
+bianscii
+base64
