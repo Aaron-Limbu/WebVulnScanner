@@ -16,3 +16,4 @@ Queue
 threading
 bianscii
 base64
+tabulate
