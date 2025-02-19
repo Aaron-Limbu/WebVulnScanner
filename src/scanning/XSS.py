@@ -4,8 +4,6 @@ from bs4 import BeautifulSoup
 import argparse
 import random
 import os
-import re
-import threading
 from urllib.parse import urlparse, urljoin
 from concurrent.futures import ThreadPoolExecutor
 
@@ -82,7 +80,7 @@ class XSSHandler:
             if method == "GET":
                 response = requests.get(self.url, params=params, headers=self.headers, timeout=10)
             else:
-                csrf_token = self.fetch_csrf_token(response)
+                csrf_token = self.fetch_csrf_token(requests.get(self.url, headers=self.headers, timeout=10))
                 data = params
                 if csrf_token:
                     data["csrf_token"] = csrf_token
@@ -110,18 +108,24 @@ class XSSHandler:
     def check_stored_xss(self, payload, param):
         """Check if stored XSS is present by reloading the page after submitting payload."""
         logging.info(f"[*] Testing for stored XSS with payload: {payload}")
-        self.send_payload(payload, param, method="POST")
 
-        # Reload to check if it's stored
-        response = requests.get(self.url, headers=self.headers, timeout=10)
-        if response and payload in response.text:
-            logging.critical(f"[!!!] Stored XSS Found! Payload found in response after refresh.")
+        post_response = self.send_payload(payload, param, method="POST")
 
-    def check_blind_xss(self, payload, param):
-        """Test Blind XSS using external tracking (e.g., XSS Hunter)."""
-        blind_xss_payload = payload.replace("alert('XSS')", "document.location='https://xsshunter.com'")  
-        self.send_payload(blind_xss_payload, param, method="POST")
-        logging.info("[+] Blind XSS payload sent. Check your XSS Hunter logs!")
+        if post_response and post_response.status_code in [200, 201]:
+            logging.info("[+] POST request successful, checking for stored XSS...")
+
+            response = requests.get(self.url, headers=self.headers, timeout=10)
+            if response and payload in response.text:
+                logging.critical(f"[!!!] Stored XSS Found! Payload found in response after refresh.")
+            else:
+                logging.info("[*] No stored XSS detected yet. Retrying after delay...")
+
+                
+                import time
+                time.sleep(3)
+                response = requests.get(self.url, headers=self.headers, timeout=10)
+                if response and payload in response.text:
+                    logging.critical(f"[!!!] Stored XSS Confirmed on retry!")
 
     def scan(self, payloads):
         """Run XSS tests with multi-threading."""
@@ -140,7 +144,6 @@ class XSSHandler:
             self.check_dom_xss(response, payload)
             self.check_reflected_xss(response, payload)
         self.check_stored_xss(payload, param)
-        self.check_blind_xss(payload, param)
 
 
 class CLI:
@@ -156,21 +159,8 @@ class CLI:
 
 
 if __name__ == "__main__":
-    try:
-        Logger.setup_logger()
-        args = CLI.parse_arguments()
-        logging.info(f"[+] Scanning {args.url} with {args.threads} threads")
-
-        xss_handler = XSSHandler(args.user_agent, args.cookie, args.url, args.threads)
-        payloads = xss_handler.load_payloads(args.payloads)
-
-        if not payloads:
-            logging.error("[-] No payloads available. Exiting.")
-            exit()
-
-        xss_handler.scan(payloads)
-
-    except KeyboardInterrupt:
-        logging.warning("[-] Interrupted by user. Exiting.")
-    except Exception as e:
-        logging.error(f"[-] Error: {e}")
+    Logger.setup_logger()
+    args = CLI.parse_arguments()
+    xss_handler = XSSHandler(args.user_agent, args.cookie, args.url, args.threads)
+    payloads = xss_handler.load_payloads(args.payloads)
+    xss_handler.scan(payloads)
