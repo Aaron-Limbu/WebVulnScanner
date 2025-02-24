@@ -1,11 +1,11 @@
 import requests
-from bs4 import BeautifulSoup 
-import argeparse
+from bs4 import BeautifulSoup
+import argparse
 import logging
 
 class Logger:
     @staticmethod
-    def setup_logger(): 
+    def setup_logger():
         logging.basicConfig(
             filename="wayback_scraper.log",
             level=logging.INFO,
@@ -13,46 +13,46 @@ class Logger:
         )
 
 class WBHandler:
-    def __init__(self,domain,output):
+    def __init__(self, domain, output):
         self.url = f"https://web.archive.org/cdx/search/cdx?url={domain}/*&output=html&fl=original&collapse=urlkey"
         self.domain = domain
         self.output = output
-    
+
     def run(self):
-    
-    	try: 
-            response = requests.get(self.url,timeout=10)
+        try:
+            response = requests.get(self.url, timeout=10)
             response.raise_for_status()
-            soup = BeautifulSoup(response.text,'html.parser')
-            linke = [link.text for link in soup.find_all('a')]
-            with open(self.output,'w') as file:
-                for link in links: 
-                    file.write(link+'\n')
+            soup = BeautifulSoup(response.text, 'html.parser')
+            links = [link.text for link in soup.find_all('a')]
 
-            print(f"[+] Scrapped {len(links)} URLS from the wayback tool")
-            logging.info(f"Scrapped {len(links)} URLS for {self.domain}")
+            with open(self.output, 'w') as file:
+                for link in links:
+                    file.write(link + '\n')
 
-        except requests.exceptions.RequestException as e: 
-            print(f"[-] Error fetching data from waback tool: {e}")
-            loggin.error(f"Error fetching data for {self.domain}: {e}")
+            print(f"[+] Scraped {len(links)} URLs from the Wayback Machine.")
+            logging.info(f"Scraped {len(links)} URLs for {self.domain}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"[-] Error fetching data from the Wayback Machine: {e}")
+            logging.error(f"Error fetching data for {self.domain}: {e}")
 
 class CLI:
     @staticmethod
     def parse_arguments():
-       parse = argeparse.ArgumentParser(description="wayback scraper tool")
-       parse.add_argument("-d","--domain",type=str,help="domain name")
-       parse.add_argument("-o","--output",type=str,help="output filename")
-       return parse.parse_args()
+        parser = argparse.ArgumentParser(description="Wayback Machine Scraper Tool")
+        parser.add_argument("-d", "--domain", type=str, required=True, help="Domain name to scrape")
+        parser.add_argument("-o", "--output", type=str, required=True, help="Output filename to save results")
+        return parser.parse_args()
 
 if __name__ == "__main__":
-    try: 
+    try:
         Logger.setup_logger()
-        cli = CLI()
-        args= cli.parse_arguments()
-        wb= WBHandler(args.domain,args.output)
-	wb.run()
-    except KeyboardInterrupt as ke: 
-        print(f"[-] {ke}")
+        args = CLI.parse_arguments()
+        wb = WBHandler(args.domain, args.output)
+        wb.run()
+
+    except KeyboardInterrupt:
+        print("[-] Scan interrupted by user.")
         
-    except Exception as e :
+    except Exception as e:
         print(f"[-] Error: {e}")
