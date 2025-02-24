@@ -70,7 +70,7 @@ class CSRFTester:
                 return
 
             csrf_token = self.fetch_csrf_token(response)
-            form_data = {"param": "test_value"} #modify data here
+            form_data = {"param": "test_value"} 
 
             if csrf_token:
                 form_data["csrf_token"] = "INVALID_CSRF"
@@ -86,39 +86,46 @@ class CSRFTester:
         except requests.RequestException as e:
             logging.error(f"[-] Error while making requests: {e}")
 
-	def test_csrf_token_reusability(self):
-		logging.info("[i] Testing token reusability")
-		try: 
-			response = self.session.get(self.url, headers=self.headers)
-			csrf_token = self.fetch_csrf_token(response)
-			if not csrf_token:
-				logging.warning("[!] No CSRF token found.")
-				return
+    def test_csrf_token_reusability(self):
+        logging.info("[i] Testing CSRF Token Reusability")
 
-			form_data = {"csrf_token": csrf_token, "param": "test_value"}#modify data here
-			post_response1 = self.session.post(self.url, headers=self.headers, data=form_data)
-			post_response2 = self.session.post(self.url, headers=self.headers, data=form_data)
+        try:
+            response = self.session.get(self.url, headers=self.headers)
+            csrf_token = self.fetch_csrf_token(response)
 
-			if post_response1.status_code == 200 and post_response2.status_code == 200:
-				logging.critical("[+] CSRF Token is Reusable! This is a vulnerability.")
-			else:
-				logging.info("[-] CSRF Token is unique per request.")
+            if not csrf_token:
+                logging.warning("[!] No CSRF token found.")
+                return
 
-		except requests.RequestException as e: 
-			logging.error(f"[-] Error while making requests: {e}")
+            form_data = {"csrf_token": csrf_token, "param": "test_value"}
+            post_response1 = self.session.post(self.url, headers=self.headers, data=form_data)
+            post_response2 = self.session.post(self.url, headers=self.headers, data=form_data)
 
-def test_referer_validation(self):
-    try: 
-		custom_headers = self.headers.copy()
-		custom_headers["Referer"] = "https://malicious-site.com"
+            if post_response1.status_code == 200 and post_response2.status_code == 200:
+                logging.critical("[+] CSRF Token is Reusable! This is a vulnerability.")
+            else:
+                logging.info("[-] CSRF Token is unique per request.")
 
-		response = self.session.post(self.url, headers=custom_headers, data={"param": "test_value"}) #modify data here
-		if response.status_code == 200:
-		    logging.critical("[+] No Referer validation! Server accepted request from a different origin.")
-		else:
-		    logging.info("[-] Referer header validation in place.")
-	except requests.RequestException as e : 
-		logging.error(f"[-] Error while making requests: {e}")
+        except requests.RequestException as e:
+            logging.error(f"[-] Error while making requests: {e}")
+
+    def test_referer_validation(self):
+        logging.info("[i] Testing Referer Header Validation")
+
+        try:
+            custom_headers = self.headers.copy()
+            custom_headers["Referer"] = "https://malicious-site.com"
+
+            response = self.session.post(self.url, headers=custom_headers, data={"param": "test_value"})
+
+            if response.status_code == 200:
+                logging.critical("[+] No Referer validation! Server accepted request from a different origin.")
+            else:
+                logging.info("[-] Referer header validation in place.")
+
+        except requests.RequestException as e:
+            logging.error(f"[-] Error while making requests: {e}")
+
 
 class CLI:
     @staticmethod
@@ -134,9 +141,12 @@ if __name__ == "__main__":
     Logger.setup_logger()
 
     try:
-        cli = CLI.parse_arguments()
-        detector = CSRFTester(cli.url, cli.cookies, cli.user_agent)
+        args = CLI.parse_arguments()
+        detector = CSRFTester(args.url, args.cookies, args.user_agent)
         detector.test_csrf_vulnerability()
+        detector.test_csrf_token_reusability()
+        detector.test_referer_validation()
+
     except KeyboardInterrupt:
         logging.info("[-] User aborted execution.")
     except Exception as e:

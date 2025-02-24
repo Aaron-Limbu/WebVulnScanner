@@ -19,11 +19,10 @@ class Logger:
         )
 
 class APIScanner:
-    def __init__(self, url, token=None, wordlist=None, proxies=None, threads=5):
+    def __init__(self, url, token=None, wordlist=None, threads=5):
         self.url = url.rstrip('/')
         self.token = token
         self.wordlist = wordlist if wordlist else ["admin", "user", "api", "config", "debug", "backup"]
-        self.proxies = {"http": proxies, "https": proxies} if proxies else None
         self.threads = threads
         self.headers = {
             "User-Agent": "APIScanner/2.0",
@@ -43,7 +42,7 @@ class APIScanner:
             full_url = f"{self.url}/{endpoint}"
             
             try:
-                response = requests.get(full_url, headers=self.headers, proxies=self.proxies, timeout=5)
+                response = requests.get(full_url, headers=self.headers, timeout=5)
                 status = response.status_code
 
                 if status == 200:
@@ -100,7 +99,6 @@ class CLI:
         parser.add_argument("-u", "--url", required=True, help="Base URL of API (e.g., https://api.example.com)")
         parser.add_argument("-t", "--token", help="Authorization token (if required)")
         parser.add_argument("-w", "--wordlist", help="Custom wordlist file for API endpoints")
-        parser.add_argument("-p", "--proxy", help="Proxy URL (e.g., http://127.0.0.1:8080)")
         parser.add_argument("-th", "--threads", type=int, default=5, help="Number of threads (default: 5)")
         return parser.parse_args()
 
@@ -117,7 +115,7 @@ if __name__ == "__main__":
             except FileNotFoundError:
                 logging.error(f"[-] Wordlist file {args.wordlist} not found. Using default list.")
 
-        scanner = APIScanner(url=args.url, token=args.token, wordlist=wordlist, proxies=args.proxy, threads=args.threads)
+        scanner = APIScanner(url=args.url, token=args.token, wordlist=wordlist, threads=args.threads)
         scanner.scan()
 
     except KeyboardInterrupt:
