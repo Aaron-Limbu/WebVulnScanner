@@ -119,7 +119,18 @@ class SQLScanner:
                         if any(error in response.text for error in errors) or response.status_code == 400:
                             print(f"[!] SQL Injection Vulnerability Found!")
                             print(f"    URL: {full_url}")
-                            print(f"    Payload: {payload}")    
+                            print(f"    Payload: {payload}")
+                            ans= input(f"[i] Do you want to extract Database info Y/N?\n")
+                            try: 
+                                if ans.lower() != "n":
+                                    print("[i] Exiting...")
+                                    exit(1)
+                                else: 
+                                    //self.db_info(db,)
+                            except KeyboardInterrupt as ke : 
+                                print(f"[i] {ke}")
+                            except Exception as e:
+                                print(f"[-] Error : {e}")
                             return True
                             exit(1)
 
@@ -286,10 +297,30 @@ class SQLScanner:
                         filtered_matches = [match for match in matches if len(match)<30 and not any(char in match for char in "<>/=\"")]
                         print(f"[+] Potential matches: {filtered_matches}\n")
 
-    //def tables_infor(): 
+    def tables_infor(db,payloads):
+        parsed_url = urlparse(self.url)
+        query_params = parse_qs(parsed_url.query)
+        for param in query_params: 
+            for payload in payloads: 
+                modified_params = query_params.copy()
+                modified_params[param] = payload
+                modified_query = urlencode(modified_params,doseq=True)
+                full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
+                response = request.get(full_url,header=self.headers)
+                baseline_response = request.get(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_params}",header=self.headers)
+                baseline_text = BeautifulSoup(baseline_response.text,"html.parser").get_text()
+                clean_text = BeautifulSoup(response.text,"html.parser").get_text()
+                if response.status_code in [400,403,404,502,503,505]: 
+                    print(f"[!] payload was sent but connection failed after it")
+                if response.status_code == 200: 
+                    if clean_text != baseline_response: 
+                        matches = re.findall(r"[a-zA-Z0-9_.@]+",clean_text)
+                        filtered_matches = [match for match in matches if len(match)<30 and not any(char in match for char in "<>/=\'")]
+                        print(f"[+] Potential matches: {filtered_matches}\n")
+
         
 
-    //def run(self):
+    def run(self):
        
 
         if self.method == "q":
