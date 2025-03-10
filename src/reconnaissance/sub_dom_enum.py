@@ -2,8 +2,9 @@ import argparse
 import requests
 import socket
 import logging
+import re
 from concurrent.futures import ThreadPoolExecutor
-from dns import resolver, exception
+from googlesearch import search
 
 class Logger:
     @staticmethod
@@ -15,43 +16,44 @@ class Logger:
         )
 
 class DomainEnum:
-    def __init__(self, domain, wordlist=None, threads=10):
+    def __init__(self, domain, threads=10):
         self.domain = domain
-        self.wordlist = wordlist
         self.threads = threads
-        self.resolved_domains = []
+        self.resolved_domains = set()
+        self.found_subdomains = set()
+
+    def google_enum(self):
+        """Uses Google Dorking to find subdomains."""
+        print(f"[i] Searching Google for subdomains of {self.domain}...")
+        query = f"site:{self.domain} -www"
+        try:
+            for result in search(query, num_results=20):
+                match = re.search(r"https?://([a-zA-Z0-9.-]+)\."+re.escape(self.domain), result)
+                if match:
+                    subdomain = match.group(1) + "." + self.domain
+                    self.found_subdomains.add(subdomain)
+        except Exception as e:
+            print(f"[-] Google search failed: {e}")
+            logging.error(f"Google search failed: {e}")
 
     def dns_query(self, subdomain):
+        """Resolve the IP address of a subdomain."""
         try:
-            fqdn = f"{subdomain}.{self.domain}"
-            ip = socket.gethostbyname(fqdn)
-            print(f"[+] Resolved: {fqdn} -> {ip}")
-            self.resolved_domains.append(f"{fqdn} -> {ip}")
-            logging.info(f"Resolved: {fqdn} -> {ip}")
+            ip = socket.gethostbyname(subdomain)
+            print(f"[+] Resolved: {subdomain} -> {ip}")
+            self.resolved_domains.add(f"{subdomain} -> {ip}")
+            logging.info(f"Resolved: {subdomain} -> {ip}")
         except socket.gaierror:
             pass  # Ignore unresolved subdomains
 
-    def subdomain_bruteforce(self):
-        if not self.wordlist:
-            print("[-] No wordlist provided for subdomain brute-forcing.")
-            return
-
-        try:
-            with open(self.wordlist, 'r') as file:
-                subdomains = [line.strip() for line in file if line.strip()]
-        except FileNotFoundError as fnf_error:
-            print(f"[-] Wordlist not found: {fnf_error}")
-            logging.error(f"Wordlist not found: {fnf_error}")
-            return
-
-        print(f"[i] Starting subdomain enumeration with {self.threads} threads...")
+    def resolve_subdomains(self):
+        """Resolve found subdomains using DNS."""
+        print(f"[i] Resolving {len(self.found_subdomains)} potential subdomains...")
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
-            executor.map(self.dns_query, subdomains)
-
-        print("[+] Subdomain enumeration completed.")
-        logging.info("Subdomain enumeration completed.")
+            executor.map(self.dns_query, self.found_subdomains)
 
     def headers_vulnerability_scan(self):
+        """Check HTTP headers for security weaknesses."""
         print("[i] Checking headers for potential vulnerabilities...")
         for entry in self.resolved_domains:
             fqdn = entry.split(" -> ")[0]
@@ -70,8 +72,11 @@ class DomainEnum:
                 logging.error(f"Could not fetch headers for {fqdn}: {e}")
 
     def run(self):
+        """Run the enumeration process."""
         print(f"[i] Starting enumeration for domain: {self.domain}")
-        self.subdomain_bruteforce()
+        self.google_enum()
+        if self.found_subdomains:
+            self.resolve_subdomains()
         if self.resolved_domains:
             self.headers_vulnerability_scan()
 
@@ -80,7 +85,6 @@ class CLI:
     def argument_parse():
         parser = argparse.ArgumentParser(description="Domain and Subdomain Enumeration Tool")
         parser.add_argument("-d", "--domain", type=str, required=True, help="Target domain for enumeration")
-        parser.add_argument("-w", "--wordlist", type=str, help="Wordlist for subdomain brute-forcing")
         parser.add_argument("-t", "--threads", type=int, default=10, help="Number of threads (default: 10)")
         return parser.parse_args()
 
@@ -88,7 +92,7 @@ if __name__ == "__main__":
     try:
         Logger.setup_logger()
         cli_args = CLI.argument_parse()
-        domain_enum = DomainEnum(cli_args.domain, cli_args.wordlist, cli_args.threads)
+        domain_enum = DomainEnum(cli_args.domain, cli_args.threads)
         domain_enum.run()
     except KeyboardInterrupt:
         print("\n[i] Process interrupted by user.")

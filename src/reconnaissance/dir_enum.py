@@ -1,9 +1,8 @@
 import logging
-import os
 import argparse
 import requests
 from concurrent.futures import ThreadPoolExecutor
-
+import random
 
 class Logger:
     @staticmethod
@@ -60,16 +59,28 @@ class VulnerabilityScan:
 
 
 class DirectoryEnum:
-    def __init__(self, url, wordlists, threads=10):
+    def __init__(self, url, wordlists,userAgent,cookies, threads=10):
         self.url = url.rstrip('/')
         self.wordlists = wordlists
         self.found_dir = []
         self.threads = threads
+        self.cookies = cookies
+        self.headers = {
+	        "User-Agent": userAgent if userAgent else random.choice([
+		        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+		        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+		        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+	            ]),
+	        "Referer": url.split('?')[0],
+	        "Accept-Language": "en-US,en;q=0.9",
+	        "Cookie": cookies
+	    }   
+
 
     def directory_req(self, directory):
         t_url = f"{self.url}/{directory}"
         try:
-            req = requests.get(t_url, timeout=5)
+            req = requests.get(t_url, timeout=5,headers=self.headers,cookies=self.cookies)
             if req.status_code == 200:
                 print(f"[+] Found directory: {t_url}")
                 self.found_dir.append(t_url)
@@ -124,6 +135,8 @@ class CLI:
         parser.add_argument("-w", "--wordlist", type=str, required=True, help="Wordlist location")
         parser.add_argument("-u", "--url", type=str, required=True, help="Website URL")
         parser.add_argument("-t", "--threads", type=int, default=10, help="Number of threads")
+        parser.add_argument("-a", "--user-agent",type=str,help="-a \"Mozilla/5.0 blah blah blah \"")
+        parser.add_argument("-c", "--cookie", type=str,help="PHP_SESID: 21323;")
         return parser.parse_args()
 
 
