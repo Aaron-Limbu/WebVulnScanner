@@ -64,6 +64,10 @@ if __name__ == "__main__":
     try: 
         os.system('cls')
         app.run(debug=True)
+    except KeyboardInterrupt : 
+        print("[i] Stopping the server")
+    except Exception as e: 
+        print("[!] Error in server: ",e)
     except OSError : 
         os.system('clear')
         app.run(debug=True)
