@@ -119,12 +119,39 @@ class Dash(ctk.CTk):
         if self.content_frame: 
             self.content_frame.destroy()
         self.content_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
+        self.content_frame.grid_columnconfigure(0,weight=1)
         self.content_frame.grid(row=0, column=1, sticky="nsew", padx=20, pady=20)
         title_label = ctk.CTkLabel(self.content_frame,text="Programmes",font=("Arial",40,"bold"),text_color="white")
         title_label.grid(row=0,column=0,padx=30,pady=(20,5),sticky="n")
         sub_tlabel = ctk.CTkLabel(self.content_frame,text="List of Ongoing programmes",font=("Arial",20),text_color="#AAAAAA")
         sub_tlabel.grid(row=1,column=0,padx=30,pady=0,sticky="n")
-                
+        programmes = [
+            ('test1', 'this is a test program'),
+            ('test2','this is a test program 2')
+        ]
+
+        self.programme_list = ctk.CTkFrame(self.content_frame)
+        self.programme_list.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
+        self.content_frame.rowconfigure(2, weight=1)
+
+        nj = 0  # Initialize `nj` before the loop
+
+        for i, (name, description) in enumerate(programmes):
+            j = nj + 0  # This is unnecessary, just use `j = nj`
+
+            programme_label = ctk.CTkLabel(self.programme_list, text=name, font=("Arial", 20, "bold"))
+            programme_label.grid(row=i * 3, column=0, padx=10, pady=10)
+
+            desc_label = ctk.CTkLabel(self.programme_list, text=description, font=("Arial", 15))
+            desc_label.grid(row=i * 3 + 1, column=0, padx=10, pady=10)
+
+            nj = j + 1  # Increment `nj`
+
+            # Remove `value=nj`, it's not a valid parameter
+            btn = ctk.CTkButton(self.programme_list, text="Start", command=lambda n=nj: print(f"Button {n} clicked"))
+            btn.grid(row=i * 3 + 2, column=0, padx=10, pady=10)
+            
+        
     
 
 if __name__ == "__main__": 

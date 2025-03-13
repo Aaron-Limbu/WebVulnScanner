@@ -3,6 +3,7 @@ from tkinter import messagebox
 from dotenv import load_dotenv
 import requests
 import os
+import src.interfaces.dash as DashUI
 
 load_dotenv()
 # Initialize main app
@@ -66,12 +67,20 @@ class AuthApp(ctk.CTk):
             password = self.login_password.get()
             response = requests.post(f"{APP_URL}/login",json={"email":email,"password":password},headers=self.headers)
             if response.status_code == 200:
+                
                 messagebox.showinfo("Login Successful", "Welcome back!")
+                self.withdraw()
+                dash_win= DashUI.Dash()
+                dash_win.mainloop()
+                exit(1)
             else:
                 messagebox.showerror("Login Failed", "Invalid email or password")
-
+        except KeyboardInterrupt : 
+            print("[i] Keyboard Interrupted")
         except requests.RequestException as re: 
             messagebox.showerror("Error",re)
+        except Exception as e: 
+            print("[!] Error: ",e)
 
     def register_action(self):
         try:
@@ -89,5 +98,11 @@ class AuthApp(ctk.CTk):
             messagebox.showerror("Error",re)
 
 if __name__ == "__main__":
-    app = AuthApp()
-    app.mainloop()
+    try: 
+        app = AuthApp()
+        app.mainloop()
+    except KeyboardInterrupt as ke: 
+        print("[i] Keyboard Interrupted")
+        exit(0)
+    except Exception as e: 
+        print("[!] ",e)
