@@ -17,6 +17,7 @@ class AuthApp(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.geometry("800x600")
+        self.resizable(False,False)
         self.main_frame = ctk.CTkFrame(self,corner_radius=0)
         self.main_frame.pack(expand=True)  
         self.frame_login = None
