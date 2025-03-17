@@ -182,14 +182,9 @@ class Dash(ctk.CTk):
         self.tool_lists.grid(row=2, column=0, columnspan=2, padx=25, pady=10, sticky="nsew")
         self.content_frame.rowconfigure(2, weight=1)
         self.tool_lists.grid_columnconfigure(0, weight=1)
-        self.tool_lists.grid_columnconfigure(1, weight=1)
         for i, (name) in enumerate(self.tools):
-            row = i % 6 if i < 6 else (i - 6) % 5 
-            col = 0 if i < 6 else 1 
-            programme_label = ctk.CTkLabel(self.tool_lists, text=name, font=("Arial", 15, "bold"))
-            programme_label.grid(row=row * 2, column=col, padx=10, pady=(10, 0), sticky="n")
-            btn = ctk.CTkButton(self.tool_lists, text="Start", command=lambda n=name: self.form(n),fg_color="#3C3D37")
-            btn.grid(row=row * 2 + 1, column=col, padx=10, pady=(0, 10), sticky="n")
+            btn = ctk.CTkButton(self.tool_lists, text=name,corner_radius=30,font=("arial",22,"bold"),command=lambda n=name: self.form(n),border_color="#3C3D37",border_width=6,fg_color="transparent",hover_color="#3C3D37",height=50,width=500)
+            btn.grid(row=i* 2 + 1, columnspan=2, padx=10, pady=(20, 20), sticky="n")
     
     def form(self,n):
         
@@ -273,7 +268,16 @@ class Dash(ctk.CTk):
         if n.lower() in ["google dork"]: 
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Google Dork",font=("arial",40,"bold"))
-            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10) 
+            query_label = ctk.CTkLabel(self.content_frame,text="Enter Query : ",font=("arial",16,"bold"))
+            query_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            query_entry = ctk.CTkEntry(self.content_frame,width=200)
+            query_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            num_label = ctk.CTkLabel(self.content_frame,text="Number of results : ",font=("arial",16,"bold"))
+            num_label.grid(row=3,column=0,padx=10,pady=(40,20),sticky="e")
+            num_entry = ctk.CTkEntry(self.content_frame,width=200)
+            num_entry.grid(row=3,column=1,padx=10,pady=(40,20),sticky="w")
+
         if n.lower() in ["header grabber"]: 
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Header Grabber",font=("arial",40,"bold"))
