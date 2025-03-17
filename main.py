@@ -266,26 +266,147 @@ class Dash(ctk.CTk):
         recon_btn.grid(row=1,column=0,padx=30,pady=0,sticky="n")
         scan_btn = ctk.CTkButton(self.content_frame,text="Scanning",border_width=2,hover_color="#1e1e1e",corner_radius=50,fg_color="transparent",font=("Arial",15,"bold"),height=40)
         scan_btn.grid(row=1,column=1,padx=30,pady=0,sticky="n")
-        programmes = [
-            ('Tool 1'), ('Tool 2'), ('Tool 3'), ('Tool 4'), ('Tool 5'), ('Tool 6'),
-            ('Tool 7'), ('Tool 8'), ('Tool 9'), ('Tool 10'), ('Tool 11')
+        self.tools = [
+            "Banner Grabber", "Directory Enumeration", "DNS Enumeration", "Google Dork", "Header Grabber", 
+            "JS File Analyzer", "Shodan Recon", "Subdomain Enumeration", "Web Scraper", "Web Status", "Whois"
         ]
+
         self.tool_lists = ctk.CTkScrollableFrame(self.content_frame, width=300)
         self.tool_lists.grid(row=2, column=0, columnspan=2, padx=25, pady=10, sticky="nsew")
         self.content_frame.rowconfigure(2, weight=1)
         self.tool_lists.grid_columnconfigure(0, weight=1)
         self.tool_lists.grid_columnconfigure(1, weight=1)
-        for i, (name) in enumerate(programmes):
+        for i, (name) in enumerate(self.tools):
             row = i % 6 if i < 6 else (i - 6) % 5 
             col = 0 if i < 6 else 1 
             programme_label = ctk.CTkLabel(self.tool_lists, text=name, font=("Arial", 15, "bold"))
             programme_label.grid(row=row * 2, column=col, padx=10, pady=(10, 0), sticky="n")
-            btn = ctk.CTkButton(self.tool_lists, text="Start", command=lambda n=name: print(f"Button {n} clicked"),fg_color="#3C3D37")
+            btn = ctk.CTkButton(self.tool_lists, text="Start", command=lambda n=name: self.form(n),fg_color="#3C3D37")
             btn.grid(row=row * 2 + 1, column=col, padx=10, pady=(0, 10), sticky="n")
+    
+    def form(self,n):
+        
+        if n.lower() in ["banner grabber"]:
+            self.framefortool()
+            Label1 = ctk.CTkLabel(self.content_frame,text="Banner Grabber ",font=("arial",40,"bold"))
+            Label1.grid(row=0,columnspan=2,padx=25, pady=10)
+            ip_label = ctk.CTkLabel(self.content_frame, text="Enter IP Address:", font=("Arial", 16))
+            ip_label.grid(row=1, column=0, padx=10, pady=(40,20), sticky="e")
+            self.ip_entry = ctk.CTkEntry(self.content_frame, width=200)
+            self.ip_entry.grid(row=1, column=1, padx=10, pady=(40,20), sticky="w")
+            port_label = ctk.CTkLabel(self.content_frame, text="Enter Port:", font=("Arial", 16))
+            port_label.grid(row=2, column=0, padx=10, pady=(40,20), sticky="e")
+            self.port_entry = ctk.CTkEntry(self.content_frame, width=200)
+            self.port_entry.grid(row=2, column=1, padx=10, pady=(40,20), sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=3, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=4,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
 
+        if n.lower() in ["directory enumeration"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame, text="Directory Enumeration", font=("Arial", 40, "bold"))
+            url_label.grid(row=0, columnspan=2, padx=25, pady=10)   
+            url_label1 = ctk.CTkLabel(self.content_frame, text="Enter URL:", font=("Arial", 16))
+            url_label1.grid(row=1, column=0, padx=10, pady=(30,20), sticky="e")
+            self.url_entry = ctk.CTkEntry(self.content_frame, width=200)  # Keep reference using self.
+            self.url_entry.grid(row=1, column=1, padx=10, pady=(30,20), sticky="w")
+            cookie_label = ctk.CTkLabel(self.content_frame,text="Enter Cookie : ",font=('arial',16,"bold"))
+            cookie_label.grid(row=2,column=0,padx=10,pady=(30,20),sticky="e")
+            self.cookie_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.cookie_entry.grid(row=2,column=1,padx=10,pady=(30,20),sticky="w")
+            th_label =ctk.CTkLabel(self.content_frame,text="Number of Threads : ",font=("arail",16,"bold"))
+            th_label.grid(row=3,column=0,padx=10,pady=(30,20),sticky="e")
+            self.th_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.th_entry.grid(row=3,column=1,padx=10,pady=(30,20),sticky="w")
+            u_agent = ctk.CTkLabel(self.content_frame,text="User agent :",font=("arial",16,"bold"))
+            u_agent.grid(row=4,column=0,padx=10,pady=(30,20),sticky="e")
+            self.agent_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.agent_entry.grid(row=4,column=1,padx=10,pady=(30,20),sticky="w")
+            word_label = ctk.CTkLabel(self.content_frame,text="Wordlist path",font=("arial",16,"bold"))
+            word_label.grid(row=5,column=0,padx=10,pady=(30,20),sticky="e")
+            self.word_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.word_entry.grid(row=5,column=1,padx=10,pady=(30,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=6, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=7,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+
+        if n.lower() in ["dns enumeration"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="DNS enumeration",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            domain_label = ctk.CTkLabel(self.content_frame,text="Enter domain : ",font=("arial",16,"bold"))
+            domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            domain_entry = ctk.CTkEntry(self.content_frame,width=200)
+            domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            th_label =ctk.CTkLabel(self.content_frame,text="Number of Threads : ",font=("arail",16,"bold"))
+            th_label.grid(row=3,column=0,padx=10,pady=(30,20),sticky="e")
+            self.th_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.th_entry.grid(row=3,column=1,padx=10,pady=(30,20),sticky="w")
+            word_label = ctk.CTkLabel(self.content_frame,text="Wordlist path",font=("arial",16,"bold"))
+            word_label.grid(row=4,column=0,padx=10,pady=(30,20),sticky="e")
+            self.word_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.word_entry.grid(row=4,column=1,padx=10,pady=(30,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=5, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=7,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+
+
+        if n.lower() in ["google dork"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="Google Dork",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["header grabber"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="Header Grabber",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["js file analyzer"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="JS File Analyzer",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["shodan recon"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="Shodan Reconnaissance",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["subdomain enumeration"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="Sub Domain Enumeration",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["web scrapper"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="Web Scapper",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["web status"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="Web Status",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+        if n.lower() in ["whois"]: 
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="WHO IS",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+
+
+    def framefortool(self):
+        if hasattr(self, "content_frame") and self.content_frame:  
+            self.content_frame.destroy()
+        self.content_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color="#1e1e1e")
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=(5,20), pady=20)
+        self.content_frame.grid_columnconfigure(0,weight=1)
+        self.content_frame.grid_columnconfigure(1,weight=1)
 if __name__ == "__main__": 
     try: 
-        app = AuthApp()
+        app = Dash()
         app.mainloop()
     except KeyboardInterrupt as ke : 
         print(f"[!] Keyboard Interrupt")
