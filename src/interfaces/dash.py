@@ -169,15 +169,51 @@ class Dash(ctk.CTk):
         self.content_frame.grid_columnconfigure(1,weight=1)
         label1 = ctk.CTkLabel(self.content_frame,text="Python Tools",font=("Arial",40,"bold"),text_color="white")
         label1.grid(row=0,column=0,columnspan=2,pady=(20,5),sticky="n")
-        recon_btn = ctk.CTkButton(self.content_frame,text="Reconnaissance",border_width=2,hover_color="#1e1e1e",corner_radius=50,fg_color="transparent",font=("Arial",15,"bold"),height=40)
+        recon_btn = ctk.CTkButton(self.content_frame,text="Reconnaissance",border_width=2,hover_color="#1e1e1e",corner_radius=50,fg_color="transparent",font=("Arial",15,"bold"),height=40,command=self.recon_tools)
         recon_btn.grid(row=1,column=0,padx=30,pady=0,sticky="n")
         scan_btn = ctk.CTkButton(self.content_frame,text="Scanning",border_width=2,hover_color="#1e1e1e",corner_radius=50,fg_color="transparent",font=("Arial",15,"bold"),height=40)
         scan_btn.grid(row=1,column=1,padx=30,pady=0,sticky="n")
+        recon_descriptions = {
+            "Banner Grabber": "Fetches service banners from open ports to identify running software and versions.",
+            "Directory Enumeration": "Finds hidden directories and files on a web server using wordlists.",
+            "DNS Enumeration": "Extracts DNS records (A, CNAME, MX, TXT, etc.) to map a domain’s infrastructure.",
+            "Google Dork": "Uses advanced Google search queries to find sensitive information exposed online.",
+            "Header Grabber": "Retrieves HTTP headers from a website, revealing security configurations.",
+            "JS File Analyzer": "Analyzes JavaScript files for API keys, sensitive data, and potential vulnerabilities.",
+            "Shodan Recon": "Uses the Shodan search engine to gather information about exposed devices and services.",
+            "Subdomain Enumeration": "Finds subdomains of a target domain to expand the attack surface.",
+            "Web Scraper": "Extracts data from web pages using HTML parsing techniques.",
+            "Web Status": "Checks whether a website is online or offline based on HTTP response codes.",
+            "Whois": "Retrieves domain registration details, including owner, registrar, and expiration date."
+        }
+        scrollable_frame1 = ctk.CTkScrollableFrame(self.content_frame, width=500)
+        scrollable_frame1.grid(row=2, columnspan=2, padx=10, pady=10, sticky="nsew")
+        label2 = ctk.CTkLabel(scrollable_frame1,text="Reconnaissance tool list",font=("arial",20,"bold"))
+        label2.grid(row=0,columnspan=2,padx=10,pady=10)
+        for row_index, (tool, description) in enumerate(recon_descriptions.items(),1):
+            tool_label = ctk.CTkLabel(scrollable_frame1, text=tool, font=("Arial", 18, "bold"))
+            tool_label.grid(row=row_index, column=0, padx=10, pady=10, sticky="w")
+
+            desc_label = ctk.CTkLabel(scrollable_frame1, text=description, font=("Arial", 16), wraplength=300, justify="left")
+            desc_label.grid(row=row_index, column=1, padx=0, pady=(20,10), sticky="w")
+        
+        
+    def recon_tools(self): 
+        if self.content_frame: 
+            self.content_frame.destroy()
+        self.content_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=(5,20), pady=20)
+        self.content_frame.grid_columnconfigure(0,weight=1)
+        self.content_frame.grid_columnconfigure(1,weight=1)
+        label1 = ctk.CTkLabel(self.content_frame,text="Recon Tools",font=("Arial",40,"bold"),text_color="white")
+        label1.grid(row=0,column=0,columnspan=2,pady=(20,5),sticky="n")
+        
         self.tools = [
             "Banner Grabber", "Directory Enumeration", "DNS Enumeration", "Google Dork", "Header Grabber", 
             "JS File Analyzer", "Shodan Recon", "Subdomain Enumeration", "Web Scraper", "Web Status", "Whois"
         ]
-
+        tools_menu= ctk.CTkButton(self.content_frame,text="Tools menu",border_width=2,hover_color="#1e1e1e",corner_radius=50,fg_color="transparent",font=("Arial",20,"bold"),height=40,command=self.show_tools)
+        tools_menu.grid(row=1,columnspan=2,padx=10,pady=0,sticky="n")
         self.tool_lists = ctk.CTkScrollableFrame(self.content_frame, width=300)
         self.tool_lists.grid(row=2, column=0, columnspan=2, padx=25, pady=10, sticky="nsew")
         self.content_frame.rowconfigure(2, weight=1)
@@ -186,21 +222,22 @@ class Dash(ctk.CTk):
             btn = ctk.CTkButton(self.tool_lists, text=name,corner_radius=30,font=("arial",22,"bold"),command=lambda n=name: self.form(n),border_color="#3C3D37",border_width=6,fg_color="transparent",hover_color="#3C3D37",height=50,width=500)
             btn.grid(row=i* 2 + 1, columnspan=2, padx=10, pady=(20, 20), sticky="n")
     
-    def form(self,n):
-        
+
+
+    def form(self,n):       
         if n.lower() in ["banner grabber"]:
             self.framefortool()
             Label1 = ctk.CTkLabel(self.content_frame,text="Banner Grabber ",font=("arial",40,"bold"))
             Label1.grid(row=0,columnspan=2,padx=25, pady=10)
             ip_label = ctk.CTkLabel(self.content_frame, text="Enter IP Address:", font=("Arial", 16))
             ip_label.grid(row=1, column=0, padx=10, pady=(40,20), sticky="e")
-            self.ip_entry = ctk.CTkEntry(self.content_frame, width=200)
+            self.ip_entry = ctk.CTkEntry(self.content_frame,width=250,height=40,font=("Arial",18))
             self.ip_entry.grid(row=1, column=1, padx=10, pady=(40,20), sticky="w")
             port_label = ctk.CTkLabel(self.content_frame, text="Enter Port:", font=("Arial", 16))
             port_label.grid(row=2, column=0, padx=10, pady=(40,20), sticky="e")
-            self.port_entry = ctk.CTkEntry(self.content_frame, width=200)
+            self.port_entry = ctk.CTkEntry(self.content_frame,width=250,height=40,font=("Arial",18))
             self.port_entry.grid(row=2, column=1, padx=10, pady=(40,20), sticky="w")
-            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan",font=("arial",20),width=400, height=40)  #command=self.start_banner_grabber)
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -214,25 +251,25 @@ class Dash(ctk.CTk):
             url_label.grid(row=0, columnspan=2, padx=25, pady=10)   
             url_label1 = ctk.CTkLabel(self.content_frame, text="Enter URL:", font=("Arial", 16))
             url_label1.grid(row=1, column=0, padx=10, pady=(30,20), sticky="e")
-            self.url_entry = ctk.CTkEntry(self.content_frame, width=200)  # Keep reference using self.
+            self.url_entry = ctk.CTkEntry(self.content_frame,width=250,height=40,font=("Arial",18))  # Keep reference using self.
             self.url_entry.grid(row=1, column=1, padx=10, pady=(30,20), sticky="w")
             cookie_label = ctk.CTkLabel(self.content_frame,text="Enter Cookie : ",font=('arial',16,"bold"))
             cookie_label.grid(row=2,column=0,padx=10,pady=(30,20),sticky="e")
-            self.cookie_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.cookie_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             self.cookie_entry.grid(row=2,column=1,padx=10,pady=(30,20),sticky="w")
             th_label =ctk.CTkLabel(self.content_frame,text="Number of Threads : ",font=("arail",16,"bold"))
             th_label.grid(row=3,column=0,padx=10,pady=(30,20),sticky="e")
-            self.th_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.th_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             self.th_entry.grid(row=3,column=1,padx=10,pady=(30,20),sticky="w")
             u_agent = ctk.CTkLabel(self.content_frame,text="User agent :",font=("arial",16,"bold"))
             u_agent.grid(row=4,column=0,padx=10,pady=(30,20),sticky="e")
-            self.agent_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.agent_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             self.agent_entry.grid(row=4,column=1,padx=10,pady=(30,20),sticky="w")
             word_label = ctk.CTkLabel(self.content_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=5,column=0,padx=10,pady=(30,20),sticky="e")
-            self.word_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.word_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             self.word_entry.grid(row=5,column=1,padx=10,pady=(30,20),sticky="w")
-            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan",font=("arial",20),width=400, height=40)  #command=self.start_banner_grabber)
             submit_button.grid(row=6, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=7,columnspan=2,pady=(20,5))
@@ -246,17 +283,17 @@ class Dash(ctk.CTk):
             url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
             domain_label = ctk.CTkLabel(self.content_frame,text="Enter domain : ",font=("arial",16,"bold"))
             domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
-            domain_entry = ctk.CTkEntry(self.content_frame,width=200)
+            domain_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
             th_label =ctk.CTkLabel(self.content_frame,text="Number of Threads : ",font=("arail",16,"bold"))
             th_label.grid(row=3,column=0,padx=10,pady=(30,20),sticky="e")
-            self.th_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.th_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             self.th_entry.grid(row=3,column=1,padx=10,pady=(30,20),sticky="w")
             word_label = ctk.CTkLabel(self.content_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=4,column=0,padx=10,pady=(30,20),sticky="e")
-            self.word_entry = ctk.CTkEntry(self.content_frame,width=200)
+            self.word_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             self.word_entry.grid(row=4,column=1,padx=10,pady=(30,20),sticky="w")
-            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan",font=("arial",20),width=400, height=40)  #command=self.start_banner_grabber)
             submit_button.grid(row=5, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=7,columnspan=2,pady=(20,5))
@@ -271,21 +308,53 @@ class Dash(ctk.CTk):
             url_label.grid(row=1,columnspan=2,padx=25, pady=10) 
             query_label = ctk.CTkLabel(self.content_frame,text="Enter Query : ",font=("arial",16,"bold"))
             query_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
-            query_entry = ctk.CTkEntry(self.content_frame,width=200)
+            query_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             query_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
             num_label = ctk.CTkLabel(self.content_frame,text="Number of results : ",font=("arial",16,"bold"))
             num_label.grid(row=3,column=0,padx=10,pady=(40,20),sticky="e")
-            num_entry = ctk.CTkEntry(self.content_frame,width=200)
+            num_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
             num_entry.grid(row=3,column=1,padx=10,pady=(40,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan",font=("arial",20),width=400, height=40)  #command=self.start_banner_grabber)
+            submit_button.grid(row=5, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=7,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
 
         if n.lower() in ["header grabber"]: 
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Header Grabber",font=("arial",40,"bold"))
             url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            query_label = ctk.CTkLabel(self.content_frame,text="Enter Query : ",font=("arial",16,"bold"))
+            query_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            query_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
+            query_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=5, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=6,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+
         if n.lower() in ["js file analyzer"]: 
             self.framefortool()
-            url_label = ctk.CTkLabel(self.content_frame,text="JS File Analyzer",font=("arial",40,"bold"))
-            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            url_label = ctk.CTkLabel(self.content_frame,text="JS Analyzer",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)
+            query_label = ctk.CTkLabel(self.content_frame,text="Enter URL : ",font=("arial",16,"bold"))
+            query_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            query_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
+            query_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=3, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=4,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+
+
         if n.lower() in ["shodan recon"]: 
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Shodan Reconnaissance",font=("arial",40,"bold"))
@@ -294,10 +363,38 @@ class Dash(ctk.CTk):
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Sub Domain Enumeration",font=("arial",40,"bold"))
             url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            domain_label = ctk.CTkLabel(self.content_frame,text="Enter domain : ",font=("arial",16,"bold"))
+            domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            domain_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
+            domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            th_label = ctk.CTkLabel(self.content_frame,text="Enter threads : ",font=("arial",16,"bold"))
+            th_label.grid(row=3,column=0,padx=10,pady=(40,20),sticky="e")
+            th_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",20))
+            th_entry.grid(row=3,column=1,padx=10,pady=(40,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=4, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=5,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+
         if n.lower() in ["web scrapper"]: 
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Web Scapper",font=("arial",40,"bold"))
-            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10)
+            domain_label = ctk.CTkLabel(self.content_frame,text="Enter domain : ",font=("arial",16,"bold"))
+            domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            domain_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
+            domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=3, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=4,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+
         if n.lower() in ["web status"]: 
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="Web Status",font=("arial",40,"bold"))
@@ -306,7 +403,17 @@ class Dash(ctk.CTk):
             self.framefortool()
             url_label = ctk.CTkLabel(self.content_frame,text="WHO IS",font=("arial",40,"bold"))
             url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
-
+            domain_label = ctk.CTkLabel(self.content_frame,text="Enter domain : ",font=("arial",16,"bold"))
+            domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            domain_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
+            domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame, text="Start Scan")  #command=self.start_banner_grabber)
+            submit_button.grid(row=3, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=4,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
 
     def framefortool(self):
         if hasattr(self, "content_frame") and self.content_frame:  
