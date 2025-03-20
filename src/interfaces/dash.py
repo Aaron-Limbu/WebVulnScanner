@@ -190,14 +190,45 @@ class Dash(ctk.CTk):
         scrollable_frame1.grid(row=2, columnspan=2, padx=10, pady=10, sticky="nsew")
         label2 = ctk.CTkLabel(scrollable_frame1,text="Reconnaissance tool list",font=("arial",20,"bold"))
         label2.grid(row=0,columnspan=2,padx=10,pady=10)
-        for row_index, (tool, description) in enumerate(recon_descriptions.items(),1):
+        tl = ctk.CTkLabel(scrollable_frame1,text="Tools",font=("arial",20,"bold"))
+        tl.grid(row=1,column=0,padx=10,pady=10,sticky="w")
+        dl = ctk.CTkLabel(scrollable_frame1,text="Tool Descriptions",font=("arial",20,"bold"))
+        dl.grid(row=1,column=1,padx=10,pady=10,sticky="w")
+
+        for row_index, (tool, description) in enumerate(recon_descriptions.items(),2):
             tool_label = ctk.CTkLabel(scrollable_frame1, text=tool, font=("Arial", 18, "bold"))
             tool_label.grid(row=row_index, column=0, padx=10, pady=10, sticky="w")
 
             desc_label = ctk.CTkLabel(scrollable_frame1, text=description, font=("Arial", 16), wraplength=300, justify="left")
             desc_label.grid(row=row_index, column=1, padx=0, pady=(20,10), sticky="w")
-        
-        
+        scan_descriptions = {
+            "API Authentication Scan":"Checks the security of API authentication mechanisms to ensure they resist unauthorized access attempts.",
+            "API Testing":"Evaluates the functionality, security, and performance of APIs to ensure they meet expected standards and specifications.",
+            "Bruteforce":"Attempts to discover valid credentials or sensitive information by systematically trying all possible combinations of passwords or inputs.",
+            "Command Injection":"Tests for vulnerabilities that allow unauthorized execution of arbitrary commands on the server through user input fields.",
+            "CSRF Scan":"Detects Cross-Site Request Forgery vulnerabilities, where unauthorized commands are transmitted from a user that the web application trusts.",
+            "Insecure Direct Object Reference (IDOR)":"Identifies flaws where an application exposes direct references to internal objects such as files or database keys, allowing unauthorized access.",
+            "Local File Inclusion (LFI)":"Checks for vulnerabilities that allow an attacker to include files on the server through the web application, potentially accessing sensitive files.",
+            "Network Scan(nmap)": "Uses nmap to conduct network scans, identifying open ports, services running on those ports, and other vulnerabilities or misconfigurations.",
+            "SQL Injection(Error based)":"Tests for SQL injection vulnerabilities by manipulating input to generate SQL errors, revealing the structure, content of the database or any other vulnerable database versions.",
+            "Server Side Request Forgery (SSRF)":"Identifies vulnerabilities where an attacker can manipulate a server to send unauthorized requests to internal or external resources, potentially accessing sensitive information, internal services, or even exploiting cloud metadata endpoints.",
+            "XML External Entity (XEE)":"Identifies vulnerabilities in XML processors that allow attackers to exploit external entities for unauthorized data access or server-side request forgery.",
+            "Cross Site Scripting(XSS)":"Detects vulnerabilities where attackers inject malicious scripts into web pages viewed by other users, compromising their session data or executing unauthorized actions."
+        }
+        scrollable_frame2 = ctk.CTkScrollableFrame(self.content_frame,width=500)
+        scrollable_frame2.grid(row=3,columnspan=2,padx=10,pady=10,sticky="nsew")
+        label3 = ctk.CTkLabel(scrollable_frame2,text="Scanning tool list",font=("arial",20,"bold"))
+        label3.grid(row=0,columnspan=2,padx=10,pady=10)
+        tl2 = ctk.CTkLabel(scrollable_frame2,text="Tools",font=("arial",20,"bold"))
+        tl2.grid(row=1,column=0,padx=10,pady=10,sticky="w")
+        dl2 = ctk.CTkLabel(scrollable_frame2,text="Tool Descriptions",font=("arial",20,"bold"))
+        dl2.grid(row=1,column=1,padx=10,pady=10,sticky="w")
+        for r_i , (t,d) in enumerate(scan_descriptions.items(),2):
+            t_l = ctk.CTkLabel(scrollable_frame2,text=t,font=("arial",18,"bold"),wraplength=250,justify="left")
+            t_l.grid(row=r_i,column=0,padx=0,pady=10,sticky="w")
+            d_l = ctk.CTkLabel(scrollable_frame2,text=d,font=("arial",16),wraplength=300,justify="left")
+            d_l.grid(row=r_i,column=1,padx=(5,0),pady=(20,10),sticky="w")
+
     def recon_tools(self): 
         if self.content_frame: 
             self.content_frame.destroy()
@@ -414,6 +445,19 @@ class Dash(ctk.CTk):
             log_frame.columnconfigure(0,weight=1)
             log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
             log_label.grid(row=0,columnspan=2,pady=(20,5))
+        if n.lower() in ["api authentication scan"]:
+            self.framefortool()
+            url_label = ctk.CTkLabel(self.content_frame,text="API Authentication scan",font=("arial",40,"bold"))
+            url_label.grid(row=1,columnspan=2,padx=25, pady=10) 
+            domain_label = ctk.CTkLabel(self.content_frame,text="Enter URL : ",font=("arial",16,"bold"))
+            domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            domain_entry = ctk.CTkEntry(self.content_frame,width=250,sticky="w")
+            domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            user_name = ctk.CTkLabel(self.content_frame,text="Enter Username : ",font=("arial",18))
+            user_name.grid(row=3,column=0,padx=10,pady=(40,20),sticky="e" )
+            u_entery = ctk.CTkEntry(self.content_frame,width=250,sticky="w")
+            u_entery.grid(row=3,column=1,padx=10,pady=(40,20),sticky="w")
+            
 
     def framefortool(self):
         if hasattr(self, "content_frame") and self.content_frame:  
