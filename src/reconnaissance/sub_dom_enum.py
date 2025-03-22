@@ -28,7 +28,7 @@ class DomainEnum:
         query = f"site:{self.domain} -www"
         try:
             for result in search(query, num_results=20):
-                match = re.search(r"https?://([a-zA-Z0-9.-]+)\."+re.escape(self.domain), result)
+                match = re.search(r"https?://([\w.-]+)\."+re.escape(self.domain), result)
                 if match:
                     subdomain = match.group(1) + "." + self.domain
                     self.found_subdomains.add(subdomain)
@@ -47,29 +47,31 @@ class DomainEnum:
             pass  # Ignore unresolved subdomains
 
     def resolve_subdomains(self):
-        """Resolve found subdomains using DNS."""
-        print(f"[i] Resolving {len(self.found_subdomains)} potential subdomains...")
+        """Resolve found subdomains using DNS, avoiding duplicates."""
+        unresolved = self.found_subdomains - {entry.split(" -> ")[0] for entry in self.resolved_domains}
+        print(f"[i] Resolving {len(unresolved)} potential subdomains...")
         with ThreadPoolExecutor(max_workers=self.threads) as executor:
-            executor.map(self.dns_query, self.found_subdomains)
+            executor.map(self.dns_query, unresolved)
 
     def headers_vulnerability_scan(self):
         """Check HTTP headers for security weaknesses."""
         print("[i] Checking headers for potential vulnerabilities...")
         for entry in self.resolved_domains:
             fqdn = entry.split(" -> ")[0]
-            try:
-                response = requests.get(f"http://{fqdn}", timeout=5)
-                print(f"[i] Headers for {fqdn}:")
-                for key, value in response.headers.items():
-                    print(f"    {key}: {value}")
-                # Check for potential issues in headers
-                if "X-Powered-By" in response.headers:
-                    print(f"[!] {fqdn} reveals server technology: {response.headers['X-Powered-By']}")
-                if "Server" in response.headers:
-                    print(f"[!] {fqdn} reveals server type: {response.headers['Server']}")
-            except requests.RequestException as e:
-                print(f"[-] Could not fetch headers for {fqdn}: {e}")
-                logging.error(f"Could not fetch headers for {fqdn}: {e}")
+            for scheme in ["http", "https"]:
+                try:
+                    response = requests.get(f"{scheme}://{fqdn}", timeout=5)
+                    print(f"[i] Headers for {fqdn} ({scheme}):")
+                    for key, value in response.headers.items():
+                        print(f"    {key}: {value}")
+                    # Security checks
+                    if "X-Powered-By" in response.headers:
+                        print(f"[!] {fqdn} reveals server technology: {response.headers['X-Powered-By']}")
+                    if "Server" in response.headers:
+                        print(f"[!] {fqdn} reveals server type: {response.headers['Server']}")
+                    break  # If HTTPS works, no need to check HTTP
+                except requests.RequestException:
+                    continue
 
     def run(self):
         """Run the enumeration process."""
