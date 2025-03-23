@@ -236,7 +236,7 @@ class Dash(ctk.CTk):
             t_l.grid(row=r_i,column=0,padx=0,pady=10,sticky="w")
             d_l = ctk.CTkLabel(scrollable_frame2,text=d,font=("arial",16),wraplength=300,justify="left")
             d_l.grid(row=r_i,column=1,padx=(5,0),pady=(20,10),sticky="w")
-
+    # recon tools list
     def recon_tools(self): 
         if self.content_frame: 
             self.content_frame.destroy()
@@ -255,7 +255,7 @@ class Dash(ctk.CTk):
         for i, (name) in enumerate(self.tools):
             btn = ctk.CTkButton(self.tool_lists, text=name,corner_radius=30,font=("arial",22,"bold"),command=lambda n=name: self.form(n),border_color="#3C3D37",border_width=6,fg_color="transparent",hover_color="#3C3D37",height=50,width=500)
             btn.grid(row=i* 2 + 1, columnspan=2, padx=10, pady=(20, 20), sticky="n")
-    
+    # scanning tools button list
     def scanning_tools(self):
         if self.content_frame: 
             self.content_frame.destroy()
@@ -275,7 +275,7 @@ class Dash(ctk.CTk):
             btn = ctk.CTkButton(self.tool_lists, text=name,corner_radius=30,font=("arial",22,"bold"),command=lambda n=name: self.form(n),border_color="#3C3D37",border_width=6,fg_color="transparent",hover_color="#3C3D37",height=50,width=500)
             btn.grid(row=i* 2 + 1, columnspan=2, padx=10, pady=(20, 20), sticky="n")
     
-
+    # tools pages 
     def form(self,n):       
         if n.lower() in ["banner grabber"]:
             self.framefortool("Banner Grabber")
@@ -561,8 +561,58 @@ class Dash(ctk.CTk):
         
         if n.lower() in ["command injection"]:
             self.framefortool("Command Injection")
-            url_label = ctk.CTkLabel(self.content_frame,text="Command Injection",font=("arial",40,"bold"))
-            url_label.grid(row=1,columnspan=2,padx=25, pady=10) 
+            domain_label = ctk.CTkLabel(self.content_frame,text="Enter Domain : ", font=("arial",16,"bold"))
+            domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
+            domain_entry = ctk.CTkEntry(self.content_frame,width=250,font=("arial",18))
+            domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
+            param_label = ctk.CTkLabel(self.content_frame, text="Specific parameter:", font=("arial", 16, "bold"))
+            param_label.grid(row=3, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.param_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.param_entry.grid(row=3, column=1, padx=10, pady=(10, 10), sticky="w")
+            method_label = ctk.CTkLabel(self.content_frame, text="HTTP method:", font=("arial", 16, "bold"))
+            method_label.grid(row=4, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.method_var = ctk.StringVar(self.content_frame)  
+            self.method_var.set("GET") 
+            methods = ["GET", "POST"]
+            self.method_dropdown = ctk.CTkOptionMenu(self.content_frame, variable=self.method_var, values=methods)
+            self.method_dropdown.grid(row=4, column=1, padx=10, pady=(10, 10), sticky="w")
+            header_label = ctk.CTkLabel(self.content_frame, text="Custom headers:", font=("arial", 16, "bold"))
+            header_label.grid(row=5, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.header_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.header_entry.grid(row=5, column=1, padx=10, pady=(10, 10), sticky="w")
+            cookie_label = ctk.CTkLabel(self.content_frame, text="Session cookies:", font=("arial", 16, "bold"))
+            cookie_label.grid(row=6, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.cookie_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.cookie_entry.grid(row=6, column=1, padx=10, pady=(10, 10), sticky="w")
+            delay_label = ctk.CTkLabel(self.content_frame, text="Delay (seconds):", font=("arial", 16, "bold"))
+            delay_label.grid(row=7, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.delay_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.delay_entry.grid(row=7, column=1, padx=10, pady=(10, 10), sticky="w")
+            wordlist_label = ctk.CTkLabel(self.content_frame, text="Path to wordlist:", font=("arial", 16, "bold"))
+            wordlist_label.grid(row=9, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.wordlist_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.wordlist_entry.grid(row=9, column=1, padx=10, pady=(10, 10), sticky="w")
+            threads_label = ctk.CTkLabel(self.content_frame, text="Number of threads:", font=("arial", 16, "bold"))
+            threads_label.grid(row=10, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.threads_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.threads_entry.grid(row=10, column=1, padx=10, pady=(10, 10), sticky="w")
+            filter_label = ctk.CTkLabel(self.content_frame, text="Keyword filter:", font=("arial", 16, "bold"))
+            filter_label.grid(row=11, column=0, padx=10, pady=(10, 10), sticky="e")
+            self.filter_entry = ctk.CTkEntry(self.content_frame, width=250, font=("arial", 18))
+            self.filter_entry.grid(row=11, column=1, padx=10, pady=(10, 10), sticky="w")
+            encoding_label = ctk.CTkLabel(self.content_frame, text="Encoding:", font=("arial", 16, "bold"))
+            encoding_label.grid(row=12, column=0, padx=10, pady=(10, 40), sticky="e")
+            encodings = ["base64", "hex", "url", "double-url", "none"]
+            self.encoding_dropdown = ctk.CTkOptionMenu(self.content_frame,values=encodings)
+            self.encoding_dropdown.grid(row=12, column=1, padx=10, pady=(10, 40), sticky="w")
+            submit_button = ctk.CTkButton(self.content_frame,text="Start Scan",font=("arial",20),width=400, height=40)  #command=self.start_banner_grabber)
+            submit_button.grid(row=13, columnspan=2, pady=15)
+            log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            log_frame.grid(row=14,columnspan=2,pady=(20,5))
+            log_frame.columnconfigure(0,weight=1)
+            log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"))
+            log_label.grid(row=0,columnspan=2,pady=(20,5))
+        
         if n.lower() in ["csrf scanning"]:
             self.framefortool("CSRF scanning")
             url_label = ctk.CTkLabel(self.content_frame,text="CSRF scan",font=("arial",40,"bold"))
