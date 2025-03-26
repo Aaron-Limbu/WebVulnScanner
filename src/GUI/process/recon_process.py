@@ -1,40 +1,50 @@
 import threading
 import sys
 from src.GUI.process.log_update_callback import RedirectOutput
-
-import src.reconnaissance.dns_enum
-import src.reconnaissance.Gdork
-import src.reconnaissance.Header
-import src.reconnaissance.js_file_analyzer
-import src.reconnaissance.shodan_recon
-import src.reconnaissance.sub_dom_enum
-import src.reconnaissance.wbScraper
-import src.reconnaissance.web_status
-import src.reconnaissance.who_is
 import os
 
-
-        
-
+"""This program runs the scripts for the GUI"""
 
 class ReconProcess:
-    def __init__(self, url, port, log_update_callback, filename):
+    def __init__(self, url, port, useragent, cookie, thread, wordlists, log_update_callback, filename):
         self.url = url
-        self.port = [int(p.strip()) for p in port.split(",") if p.strip()]
+        self.port = [int(p.strip()) for p in port.split(",") if p.strip()] if port else [] 
+        self.cookie = cookie or ""
+        self.useragent = useragent or ""
+        self.thread = thread or 1 
+        self.wordlists = wordlists or [] 
         self.log_update_callback = log_update_callback
-
         self.log_path = f"{os.getcwd()}\\logs\\{filename}.log"
 
-    def BannerGrabber(self):
-        # Redirect stdout/stderr to the callback for the UI
-        redirect_output = RedirectOutput(self.log_update_callback,self.log_path)
+
+    def _setup_output_redirection(self):
+        """Redirects stdout and stderr to both UI and log file."""
+        redirect_output = RedirectOutput(self.log_update_callback, self.log_path)
         sys.stdout = redirect_output
         sys.stderr = redirect_output
+
+    def BannerGrabber(self):
+        self._setup_output_redirection()
+        """Starts the Banner Grabber tool."""
         from src.reconnaissance.banner_grabber import BannerGrabber as BG
-
-        # Start the Banner Grabber
-        bg = BG(self.url, self.port)
-
-        # Run the banner grabbing process in a separate thread
+        bg = BG(self.url,self.port)
         banner_thread = threading.Thread(target=lambda: (bg.run(), sys.stdout.flush(), sys.stderr.flush()))
         banner_thread.start()
+
+    def DNSenum(self): 
+        self._setup_output_redirection()
+        """Starts the DNS enumeration tool"""
+        from src.reconnaissance.dns_enum import DNSEnum as DE
+        de = DE(self.url,self.wordlists,self.thread)
+        dns_enum_thread = threading.Thread(target=lambda:(de.run(),de.scan_vulnerabilities(),sys.stdout.flush(),sys.stderr.flush()))
+        dns_enum_thread.start()
+
+    def HeaderGrabber(self):
+        self._setup_output_redirection()
+        """Starts the Header Grabber tool."""
+        from src.reconnaissance.Header import Application as HG
+        hg = HG(self.url)
+        header_thread = threading.Thread(target=lambda: (hg.run(),sys.stdout.flush(),sys.stderr.flush()))  
+        header_thread.start()      
+
+    
