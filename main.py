@@ -385,7 +385,7 @@ class Dash(ctk.CTk):
             self.port_entry.grid(row=1, column=1, padx=10, pady=10, sticky="w")
             submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",
                                           font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.scan(url=self.ip_entry.get(), port=self.port_entry.get(),wordlists=None,useragent=None,cookies=None,threads=None,tool="banner_grabber")) 
+                                          command=lambda: self.recon_scan(url=self.ip_entry.get(), port=self.port_entry.get(),wordlists=None,useragent=None,cookies=None,threads=None,n_result=None,output=None,input_list=None,tool="banner_grabber")) 
             submit_button.grid(row=2, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500, height=10)  # Set height
             log_frame.grid(row=3, columnspan=2, pady=10)
@@ -415,7 +415,9 @@ class Dash(ctk.CTk):
             word_label.grid(row=6,column=0,padx=10,pady=10,sticky="e")
             self.word_entry = ctk.CTkEntry(self.box_frame,width=300,height=40,font=("arial",16))
             self.word_entry.grid(row=6,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.recon_scan(url=self.url_entry.get(),cookies=self.cookie_entry.get(),
+                                                                  wordlists=self.word_entry.get(),useragent=self.agent_entry.get(),threads=self.th_entry.get(),port=None,n_result=None,output=None,input_list=None,tool="dir_enum"))  
             submit_button.grid(row=7, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500, height=10)  # Set height
             log_frame.grid(row=4, columnspan=2, pady=10)
@@ -438,7 +440,7 @@ class Dash(ctk.CTk):
             self.word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             self.word_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.scan(url=domain_entry.get(),threads=th_entry.get(),wordlists=word_entry.get(),tool="dns_enum"))  
+                                          command=lambda: self.recon_scan(url=domain_entry.get(),port=None,useragent=None,cookies=None,threads=th_entry.get(),wordlists=word_entry.get(),n_result=None,output=None,input_list=None,tool="dns_enum"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -457,7 +459,8 @@ class Dash(ctk.CTk):
             num_label.grid(row=3,column=0,padx=10,pady=10,sticky="e")
             num_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             num_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command=lambda: self.recon_scan(url=query_entry.get(),port=None,tool="google_dork",wordlists=None,useragent=None,cookies=None,threads=None,n_result=num_entry.get(),input_list=None,output=None))  
             submit_button.grid(row=5, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=7,columnspan=2,pady=(20,5))
@@ -472,7 +475,7 @@ class Dash(ctk.CTk):
             query_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             query_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.scan(url=query_entry.get(), port=None,useragent=None,cookies=None,threads=None,wordlists=None ,tool="header_grabber"))  
+                                          command=lambda: self.recon_scan(url=query_entry.get(), port=None,useragent=None,cookies=None,threads=None,wordlists=None,n_result=None,input_list=None,output=None ,tool="header_grabber"))  
             submit_button.grid(row=5, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=6,columnspan=2,pady=(20,5))
@@ -486,7 +489,7 @@ class Dash(ctk.CTk):
             query_label.grid(row=2,column=0,padx=10,pady=10,sticky="e")
             query_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             query_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,command=lambda: self.recon_scan(url=query_entry.get(),port=None,wordlists=None,useragent=None,cookies=None,threads=None,n_result=None,output=None,input_list=None,tool="js_file_analyzer"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -511,7 +514,8 @@ class Dash(ctk.CTk):
             th_label.grid(row=1,column=0,padx=10,pady=10,sticky="e")
             th_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             th_entry.grid(row=1,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command=lambda: self.recon_scan(url=domain_entry.get(),port=None,wordlists=None,useragent=None,cookies=None,threads=th_entry.get(),n_result=None,output=None,input_list=None,tool="subdomain_enum"))  
             submit_button.grid(row=2, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=5,columnspan=2,pady=(20,5))
@@ -525,7 +529,8 @@ class Dash(ctk.CTk):
             domain_label.grid(row=2,column=0,padx=10,pady=10,sticky="e")
             domain_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             domain_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command=lambda: self.recon_scan(url=url_entry.get(),port=None,wordlists=None,useragent=None,cookies=None,threads=None,n_result=None,output=None,input_list=None,tool="web_scraper"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -544,10 +549,11 @@ class Dash(ctk.CTk):
             input_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             input_entry.grid(row=1,column=1,padx=10,pady=10,sticky="w")
             output = ctk.CTkLabel(self.box_frame,text="Output filename : ",font=("arial",16,"bold"))
-            # output.grid(row=2,column=0,padx=10,pady=10,sticky="e")
-            # output_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
-            # output_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            output.grid(row=2,column=0,padx=10,pady=10,sticky="e")
+            output_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
+            output_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command= lambda: self.recon_scan(url=domain_entry.get(),port=None,wordlists=word_entry.get(),useragent=None,cookies=None,threads=None,n_result=None,output=output_entry.get(),input_list=input_entry.get(),tool="web_status"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=6,columnspan=2,pady=(20,5))
@@ -562,7 +568,8 @@ class Dash(ctk.CTk):
             domain_label.grid(row=2,column=0,padx=10,pady=(40,20),sticky="e")
             domain_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command=lambda: self.recon_scan(url=query_entry.get(),port=None,wordlists=None,useragent=None,cookies=None,threads=None,n_result=None,output=None,input_list=None,tool="who_is"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -587,7 +594,8 @@ class Dash(ctk.CTk):
             word_label.grid(row=3,column=0,padx=10,pady=10,sticky="e")
             word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command=lambda: self.vuln_scan(url=domain_entry.get(),username=u_entery.get(),password=pas_entry.get(),wordlists=word_entry.get(),threads=None,token=None,cookie=None,useragent=None,http_method=None,headers=None,delay=None,keyword_filter=None,encoding=None,id1=None,id2=None,parameter=None,ip_addr=None,port=None,scan_argument=None,script=None,dns_rebinding=None,time_based=None,attack_type=None,target_file=None,tool="Api_Auth_scan"))  
             submit_button.grid(row=4, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -613,7 +621,8 @@ class Dash(ctk.CTk):
             word_label.grid(row=3,column=0,padx=10,pady=10,sticky="e")
             word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command=lambda: self.vuln_scan(url=domain_entry.get(),username=None,password=None,wordlists=word_entry.get(),threads=thread_entry.get(),token=token_entry.get(),cookie=None,useragent=None,http_method=None,headers=None,delay=None,keyword_filter=None,encoding=None,id1=None,id2=None,parameter=None,ip_addr=None,port=None,scan_argument=None,script=None,dns_rebinding=None,time_based=None,attack_type=None,target_file=None,tool="API_test"))  
             submit_button.grid(row=4, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -1010,25 +1019,98 @@ class Dash(ctk.CTk):
             self.log_label.grid_configure(sticky="w") 
             self.log_label.update_idletasks()
 
-    def scan(self,url,port,tool,wordlists,useragent,cookies,threads):
+    #sending GUI input to the processor
+    def recon_scan(self,url,port,tool,wordlists,useragent,cookies,threads,n_result,output,input_list):
         try: 
             from src.GUI.process.recon_process import ReconProcess
+            recon_process = ReconProcess(url=url,port=port,useragent=useragent,cookie=cookies,thread=threads,wordlists=wordlists,n=n_result,output_file=output,input_list=input_list,log_update_callback=self.log_update_callback,filename=tool)
             if tool=="banner_grabber": 
-                # Start the recon process in a separate thread
-                recon_process = ReconProcess(url=url, port=port,useragent=None,cookie=None,thread=None,wordlists=None ,log_update_callback= self.log_update_callback,filename=tool)
                 recon_process.BannerGrabber()
             elif tool == "dir_enum": 
-                recon_process = ReconProcess(url,wordlists,useragent,cookies,threads,tool)
-            
+                recon_process.DirEnum()
             elif tool == "header_grabber":
-                recon_process = ReconProcess(url=url, port=None,useragent=None,cookie=None,thread=None,wordlists=None,log_update_callback=self.log_update_callback,filename=tool)
                 recon_process.HeaderGrabber()
 
             elif tool == "dns_enum":
-                recon_process = ReconProcess(url=url,wordlists=wordlists,thread=threads,log_update_callback=self.log_update_callback,filename=tool)
                 recon_process.DNSenum()
 
+            elif tool == "google_dork":
+                recon_process.Gdork()
+            elif tool == "js_file_analyzer": 
+                recon_process.JSfAnalyz()
+
+            elif tool == "shodan_enum":
+                recon_process.ShodanEnum()
+
+            elif tool == "subdomain_enum":
+                recon_process.SubDomEnum()
+
+            elif tool == "web_scraper": 
+                recon_process.WebScrap()
+
+            elif tool == "web_status": 
+                recon_process.WebStatus()
+
+            elif tool == "who_is":
+                recon_process.Wis()
         except Exception as e: 
+            messagebox.showerror("Error",e)
+
+    def vuln_scan(self,url,username,password,wordlists,threads,token,cookie,useragent,http_method,headers,delay,keyword_filter,encoding,id1,id2,parameter,ip_addr,port,scan_argument,script,dns_rebinding,time_based,attack_type,target_file,tool):
+        try:
+            from src.GUI.process.vuln_process import VulnScanProcess
+            vuln_scan = VulnScanProcess(url =url ,
+                                        username =username,
+                                        password = password,
+                                        wordlists_path =wordlists,
+                                        thread=threads,
+                                        tokens = token,
+                                        cookies =cookie,
+                                        useragent = useragent,
+                                        http_method = http_method,
+                                        headers = headers,
+                                        delay = delay,
+                                        keyword_filter = keyword_filter,
+                                        encoding = encoding,
+                                        param_id1 = id1,
+                                        param_id2= id2,
+                                        parameter= parameter,
+                                        ip = ip_addr,
+                                        ports =port,
+                                        scan_argument = scan_argument,
+                                        script = script,
+                                        dns_rebinding = dns_rebinding,
+                                        time_based = time_based,
+                                        attack_type = attack_type,
+                                        target_file = target_file,
+                                        log_update_callback=self.log_update_callback,
+                                        filename=tool)
+            if tool == "Api_Auth_scan":
+                vuln_scan.ApiAuthTest()
+            elif tool == "API_test": 
+                vuln_scan.ApiTest()
+            elif tool == "Bruteforce": 
+                vuln_scan.Bruteforce()
+            elif tool == "Command_Injection": 
+                vuln_scan.CommandInjection()
+            elif tool == "CSRF": 
+                vuln_scan.CSRF()
+            elif tool == "IDOR": 
+                vuln_scan.IDOR()
+            elif tool == "LFI": 
+                vuln_scan.LFI()
+            elif tool == "nmap_scan": 
+                vuln_scan.nmapscan()
+            elif tool == "sql_injection": 
+                vuln_scan.SQL_Injection()
+            elif tool == "SSRF":
+                vuln_scan.SSRF()
+            elif tool == "XEE": 
+                vuln_scan.XEE()
+            elif tool == "XSS": 
+                vuln_scan.XEE()
+
+        except Exception as e :
             messagebox.showerror("Error",e)
 
 if __name__ == "__main__": 
