@@ -118,8 +118,8 @@ class DirectoryEnum:
 
 
 class Application:
-    def __init__(self, url, wordlists, threads):
-        self.de = DirectoryEnum(url, wordlists, threads)
+    def __init__(self, url, wordlists, threads,cookies,useragent):
+        self.de = DirectoryEnum(url, wordlists,useragent,cookies, threads)
 
     def run(self):
         self.de.enum()
