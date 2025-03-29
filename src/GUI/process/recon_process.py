@@ -2,32 +2,53 @@ import threading
 import sys
 from src.GUI.process.log_update_callback import RedirectOutput
 import os
+import multiprocessing
 
 """
     This program runs the scripts for the GUI.
     _setup_output_redirection redirects the print() content to the GUI
 """
+import os
+import multiprocessing
 
 class ReconProcess:
-    def __init__(self, url, port, useragent, cookie, thread, wordlists,input_list, n,output_file,log_update_callback, filename):
+    def __init__(self, url, port, useragent, cookie, thread, wordlists, input_list, n, output_file, log_update_callback, filename):
         self.url = url
+
+        # Validate port input
         if port:
             try:
-                self.port = [int(p.strip()) for p in port.split(",") if p.strip()]
+                self.port = [int(p.strip()) for p in str(port).split(",") if p.strip().isdigit()]
             except ValueError:
                 self.port = []  # Default to empty list if invalid port input
         else:
             self.port = []
+
         self.cookie = cookie or ""
         self.useragent = useragent or ""
-        self.thread = thread or 1 
-        self.wordlists = wordlists or "" 
+
+        # Ensure thread is treated as a string before calling strip()
+        if isinstance(thread, int):  
+            self.thread = thread  # Already an integer, no need to strip
+        elif isinstance(thread, str) and thread.strip().isdigit():  
+            self.thread = int(thread.strip())  
+        else:  
+            self.thread = 10  # Default to 10 if invalid input
+
+        # Validate n value
+        self.n = n if isinstance(n, int) else 10
+
+        # Ensure thread count doesn't exceed available cores
+        max_threads = min(10, multiprocessing.cpu_count())
+        self.thread = min(self.thread, max_threads)
+
+        self.wordlists = os.path.join(os.getcwd(), "data", "wordlists", wordlists)
         self.log_update_callback = log_update_callback
-        self.log_path = f"{os.getcwd()}\\logs\\{filename}.log"
-        self.n = n if isinstance(n, int) and n > 0 else 10 
-        self.output_file = output_file or "output"
         self.log_path = os.path.join(os.getcwd(), "logs", f"{filename}.log")
+        self.output_file = output_file or "output"
         self.input_list_text = input_list
+
+
 
     def _setup_output_redirection(self):
         """Redirects stdout and stderr to both UI and log file."""
@@ -55,8 +76,8 @@ class ReconProcess:
         self._setup_output_redirection()
         """Starts the Directory Enumeration tool"""
         from src.reconnaissance.dir_enum import Application as DirE
-        dire = DirE(self.url,self.wordlists,self.useragent,self.cookie,self.thread)
-        dire_thread = threading.Thread(target=lambda: (dire.run(),sys.stdout.flush(),sys.stderr.flush()))
+        dire = DirE(self.url,self.wordlists,self.thread,self.cookie,self.useragent)
+        dire_thread = threading.Thread(target=lambda:(dire.run(),sys.stdout.flush(),sys.stderr.flush()))
         dire_thread.start()
 
     def HeaderGrabber(self):
