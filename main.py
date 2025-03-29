@@ -371,6 +371,15 @@ class Dash(ctk.CTk):
             btn = ctk.CTkButton(self.tool_lists, text=name,corner_radius=30,font=("arial",22,"bold"),command=lambda n=name: self.form(n),border_color="#3C3D37",border_width=6,fg_color="transparent",hover_color="#3C3D37",height=50,width=500)
             btn.grid(row=i* 2 + 1, columnspan=2, padx=10, pady=(20, 20), sticky="n")
     
+    def get_files(self, directory):
+        """Fetches the list of files from the given directory."""
+        if not os.path.exists(directory):
+            return ["No files found"]  # If directory doesn't exist
+        return [f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
+
+    def stop_scan():
+        if app:  # Check if the scan is running
+            app.stop()
     # tools pages 
     def form(self,n):       
         if n.lower() in ["banner grabber"]:
@@ -413,12 +422,18 @@ class Dash(ctk.CTk):
             self.agent_entry.grid(row=5,column=1,padx=10,pady=10,sticky="w")
             word_label = ctk.CTkLabel(self.box_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=6,column=0,padx=10,pady=10,sticky="e")
-            self.word_entry = ctk.CTkEntry(self.box_frame,width=300,height=40,font=("arial",16))
+            self.file_list = self.get_files("data/wordlists/directory_enumeration")
+            self.word_var = ctk.StringVar(value=self.file_list[0] if self.file_list else "No wordlists found")
+            self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
+            # self.word_entry = ctk.CTkEntry(self.box_frame,width=300,height=40,font=("arial",16))
             self.word_entry.grid(row=6,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
                                         command=lambda: self.recon_scan(url=self.url_entry.get(),cookies=self.cookie_entry.get(),
-                                                                  wordlists=self.word_entry.get(),useragent=self.agent_entry.get(),threads=self.th_entry.get(),port=None,n_result=None,output=None,input_list=None,tool="dir_enum"))  
+                                                                 wordlists= os.path.join("directory_enumeration", self.word_entry.get()),useragent=self.agent_entry.get(),threads=self.th_entry.get(),port="80",n_result=10  ,output=None,input_list=None,tool="dir_enum"))  
             submit_button.grid(row=7, columnspan=2, pady=15)
+            # stop_button = ctk.CTkButton(self.box_frame,text="Stop Scan",font=("arial",20,"bold"),width=400,height=40,
+            #                             command=)
+            # stop_button.grid(row=7,column=1,pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500, height=10)  # Set height
             log_frame.grid(row=4, columnspan=2, pady=10)
             log_frame.columnconfigure(0, weight=1)
@@ -440,7 +455,7 @@ class Dash(ctk.CTk):
             self.word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             self.word_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.recon_scan(url=domain_entry.get(),port=None,useragent=None,cookies=None,threads=th_entry.get(),wordlists=word_entry.get(),n_result=None,output=None,input_list=None,tool="dns_enum"))  
+                                          command=lambda: self.recon_scan(url=domain_entry.get(),port="88",useragent=None,cookies=None,threads=th_entry.get(),wordlists=word_entry.get(),n_result=10,output=None,input_list=None,tool="dns_enum"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -1023,7 +1038,7 @@ class Dash(ctk.CTk):
     def recon_scan(self,url,port,tool,wordlists,useragent,cookies,threads,n_result,output,input_list):
         try: 
             from src.GUI.process.recon_process import ReconProcess
-            recon_process = ReconProcess(url=url,port=port,useragent=useragent,cookie=cookies,thread=threads,wordlists=wordlists,n=n_result,output_file=output,input_list=input_list,log_update_callback=self.log_update_callback,filename=tool)
+            recon_process = ReconProcess(url=url,port=port,useragent=useragent,cookie=cookies,thread=int(threads) ,wordlists=wordlists,n=n_result,output_file=output,input_list=input_list,log_update_callback=self.log_update_callback,filename=tool)
             if tool=="banner_grabber": 
                 recon_process.BannerGrabber()
             elif tool == "dir_enum": 
@@ -1055,6 +1070,7 @@ class Dash(ctk.CTk):
                 recon_process.Wis()
         except Exception as e: 
             messagebox.showerror("Error",e)
+            print(e)
 
     def vuln_scan(self,url,username,password,wordlists,threads,token,cookie,useragent,http_method,headers,delay,keyword_filter,encoding,id1,id2,parameter,ip_addr,port,scan_argument,script,dns_rebinding,time_based,attack_type,target_file,tool):
         try:
