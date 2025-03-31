@@ -683,7 +683,30 @@ class Dash(ctk.CTk):
             thread_label.grid(row=6,column=0,padx=10,pady=10,stick="e")
             thread_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             thread_entry.grid(row=6,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                          command= lambda: self.vuln_scan(url=domain_entry.get(),
+                                                                          username=user_entry.get(),
+                                                                          password=pas_entry.get(),
+                                                                          wordlists=self.word_entry.get(),
+                                                                          threads=thread_entry.get(),
+                                                                          token=None,
+                                                                          cookie=None,useragent=None,
+                                                                          http_method=m_entry.get(),
+                                                                          headers=None,
+                                                                          delay=None,
+                                                                          keyword_filter=None,
+                                                                          encoding=None,
+                                                                          id1=pu_entry.get(),id2=pp_entry.get(),
+                                                                          parameter=None,
+                                                                          ip_addr=None,
+                                                                          port=None,
+                                                                          scan_argument=None,
+                                                                          script=None,
+                                                                          dns_rebinding=None,
+                                                                          time_based=None,
+                                                                          attack_type=None,
+                                                                          target_file=None,
+                                                                          tool="Bruteforce"))  
             submit_button.grid(row=7, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -739,7 +762,33 @@ class Dash(ctk.CTk):
             encodings = ["base64", "hex", "url", "double-url", "none"]
             self.encoding_dropdown = ctk.CTkOptionMenu(self.box_frame,values=encodings)
             self.encoding_dropdown.grid(row=9, column=1, padx=10, pady=(10, 40), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,                              command=lambda: self.vuln_scan(
+                                  url=domain_entry.get(),
+                                  username=user_entry.get(),
+                                  password=pas_entry.get(),
+                                  wordlists=self.word_entry.get(),
+                                  threads=self.threads_entry.get(),
+                                  token=None,
+                                  cookie=self.cookie_entry.get(),
+                                  useragent=None,
+                                  http_method=self.method_var.get(),
+                                  headers=self.header_entry.get(),
+                                  delay=self.delay_entry.get(),
+                                  keyword_filter=self.filter_entry.get(),
+                                  encoding=self.encoding_dropdown.get(),
+                                  id1=pu_entry.get(),
+                                  id2=pp_entry.get(),
+                                  parameter=self.param_entry.get(),
+                                  ip_addr=None,
+                                  port=None,
+                                  scan_argument=None,
+                                  script=None,
+                                  dns_rebinding=None,
+                                  time_based=None,
+                                  attack_type=None,
+                                  target_file=None,
+                                  tool="Command_Injection"
+                              ))  
             submit_button.grid(row=10, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -761,7 +810,34 @@ class Dash(ctk.CTk):
             u_agent.grid(row=2,column=0,padx=10,pady=10,sticky="e")
             u_entery = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             u_entery.grid(row=2,column=1,padx=10,pady=10,sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=domain_entry.get(),
+                                        username=None,
+                                        password=None,
+                                        wordlists=None,
+                                        threads=None,
+                                        token=None,
+                                        cookie=cookie_entry.get(),
+                                        useragent=u_entery.get(),
+                                        http_method=None,
+                                        headers=None,
+                                        delay=None,
+                                        keyword_filter=None,
+                                        encoding=None,
+                                        id1=None,
+                                        id2=None,
+                                        parameter=None,
+                                        ip_addr=None,
+                                        port=None,
+                                        scan_argument=None,
+                                        script=None,
+                                        dns_rebinding=None,
+                                        time_based=None,
+                                        attack_type=None,
+                                        target_file=None,
+                                        tool="CSRF"
+                                    ))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -800,7 +876,34 @@ class Dash(ctk.CTk):
             cookie_label.grid(row=6, column=0, padx=10, pady=(10, 10), sticky="e")
             cookie_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16),height=40)
             cookie_entry.grid(row=6, column=1, padx=10, pady=(10, 10), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=url_entry.get(),
+                                        username=None,
+                                        password=None,
+                                        wordlists=None,
+                                        threads=None,
+                                        token=None,
+                                        cookie=cookie_entry.get(),
+                                        useragent=None,
+                                        http_method=method_dropdown.get(),
+                                        headers=header_entry.get(),
+                                        delay=None,
+                                        keyword_filter=None,
+                                        encoding=None,
+                                        id1=start_entry.get(),
+                                        id2=end_entry.get(),
+                                        parameter=param_entry.get(),
+                                        ip_addr=None,
+                                        port=None,
+                                        scan_argument=None,
+                                        script=None,
+                                        dns_rebinding=None,
+                                        time_based=None,
+                                        attack_type=None,
+                                        target_file=None,
+                                        tool="IDOR"
+                                    ))  
             submit_button.grid(row=7, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -835,7 +938,34 @@ class Dash(ctk.CTk):
             threads_label.grid(row=5, column=0, padx=10, pady=(10, 10), sticky="e")
             threads_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16),height=40)
             threads_entry.grid(row=5, column=1, padx=10, pady=(10, 10), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=url_entry.get(),
+                                        username=None,
+                                        password=None,
+                                        wordlists=None,
+                                        threads=threads_entry.get(),
+                                        token=None,
+                                        cookie=cookies_entry.get(),
+                                        useragent=None,
+                                        http_method=None,
+                                        headers=headers_entry.get(),
+                                        delay=None,
+                                        keyword_filter=None,
+                                        encoding=encoding_dropdown.get(),
+                                        id1=None,
+                                        id2=None,
+                                        parameter=param_entry.get(),
+                                        ip_addr=None,
+                                        port=None,
+                                        scan_argument=None,
+                                        script=None,
+                                        dns_rebinding=None,
+                                        time_based=None,
+                                        attack_type=None,
+                                        target_file=None,
+                                        tool="LFI"
+                                    ))  
             submit_button.grid(row=6, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -864,7 +994,34 @@ class Dash(ctk.CTk):
             script_label.grid(row=3, column=0, padx=10, pady=(10, 10), sticky="e")
             script_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16),height=40)
             script_entry.grid(row=3, column=1, padx=10, pady=(10, 10), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=None,
+                                        username=None,
+                                        password=None,
+                                        wordlists=None,
+                                        threads=None,
+                                        token=None,
+                                        cookie=None,
+                                        useragent=None,
+                                        http_method=None,
+                                        headers=None,
+                                        delay=None,
+                                        keyword_filter=None,
+                                        encoding=None,
+                                        id1=None,
+                                        id2=None,
+                                        parameter=None,
+                                        ip_addr=ip_entry.get(),
+                                        port=ports_entry.get(),
+                                        scan_argument=args_entry.get(),
+                                        script=script_entry.get(),
+                                        dns_rebinding=None,
+                                        time_based=None,
+                                        attack_type=None,
+                                        target_file=None,
+                                        tool="Nmap Scan"
+                                    ))  
             submit_button.grid(row=4, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -891,7 +1048,34 @@ class Dash(ctk.CTk):
             user_agent_label.grid(row=3, column=0, padx=10, pady=(10, 10), sticky="e")
             user_agent_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16),height=40)
             user_agent_entry.grid(row=3, column=1, padx=10, pady=(10, 10), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=url_entry.get(),
+                                        username=None,
+                                        password=None,
+                                        wordlists=None,
+                                        threads=None,
+                                        token=None,
+                                        cookie=cookie_entry.get(),
+                                        useragent=user_agent_entry.get(),
+                                        http_method=method_dropdown.get(),
+                                        headers=None,
+                                        delay=None,
+                                        keyword_filter=None,
+                                        encoding=None,
+                                        id1=None,
+                                        id2=None,
+                                        parameter=None,
+                                        ip_addr=None,
+                                        port=None,
+                                        scan_argument=None,
+                                        script=None,
+                                        dns_rebinding=None,
+                                        time_based=None,
+                                        attack_type=None,
+                                        target_file=None,
+                                        tool="sql_injection"
+                                    ))  
             submit_button.grid(row=4, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -937,7 +1121,34 @@ class Dash(ctk.CTk):
             wordlist_label.grid(row=8, column=0, padx=10, pady=(10, 10), sticky="e")
             wordlist_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16),height=40)
             wordlist_entry.grid(row=8, column=1, padx=10, pady=(10, 10), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=url_entry.get(),
+                                        username=None,
+                                        password=None,
+                                        wordlists=wordlist_entry.get(),
+                                        threads=None,
+                                        token=None,
+                                        cookie=cookie_entry.get(),
+                                        useragent=None,
+                                        http_method=method_dropdown.get(),
+                                        headers=header_entry.get(),
+                                        delay=delay_entry.get(),
+                                        keyword_filter=None,
+                                        encoding=None,
+                                        id1=None,
+                                        id2=None,
+                                        parameter=param_entry.get(),
+                                        ip_addr=None,
+                                        port=None,
+                                        scan_argument=None,
+                                        script=None,
+                                        dns_rebinding=dns_var.get(),
+                                        time_based=time_var.get(),
+                                        attack_type=None,
+                                        target_file=None,
+                                        tool="SSRF"
+                                    ))  
             submit_button.grid(row=9, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -976,7 +1187,34 @@ class Dash(ctk.CTk):
             encoding_label.grid(row=6, column=0, padx=10, pady=(10, 10), sticky="e")
             encoding_dropdown = ctk.CTkOptionMenu(self.box_frame, values=["base64", "hex"],height=40,width=300)
             encoding_dropdown.grid(row=6, column=1, padx=10, pady=(10, 10), sticky="w")
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                        command=lambda: self.vuln_scan(
+                                        url=url_entry.get(),
+                                        username=None,
+                                        password=None,
+                                        wordlists=None,
+                                        threads=None,
+                                        token=None,
+                                        cookie=cookie_entry.get(),
+                                        useragent=None,
+                                        http_method=method_dropdown.get(),
+                                        headers=header_entry.get(),
+                                        delay=None,
+                                        keyword_filter=None,
+                                        encoding=encoding_dropdown.get(),
+                                        id1=None,
+                                        id2=None,
+                                        parameter=None,
+                                        ip_addr=None,
+                                        port=None,
+                                        scan_argument=None,
+                                        script=None,
+                                        dns_rebinding=None,
+                                        time_based=None,
+                                        attack_type=attack_dropdown.get(),
+                                        target_file=target_entry.get(),
+                                        tool="XEE"
+                                    ))  
             submit_button.grid(row=7, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -1008,7 +1246,34 @@ class Dash(ctk.CTk):
             threads_entry = ctk.CTkEntry(self.box_frame, width=100, font=("arial", 16),height=40)
             threads_entry.grid(row=4, column=1, padx=10, pady=(10, 10), sticky="w")
             threads_entry.insert(0, "5") 
-            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40)  
+            submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
+                                           command=lambda: self.vuln_scan(
+                                            url=url_entry.get(),
+                                            cookie=cookie_entry.get(),
+                                            useragent=user_agent_entry.get(),
+                                            wordlists=payloads_entry.get(),  
+                                            threads=int(threads_entry.get()) if threads_entry.get().isdigit() else 5,
+                                            username=None,
+                                            password=None,
+                                            token=None,
+                                            http_method=None,
+                                            headers=None,
+                                            delay=None,
+                                            keyword_filter=None,
+                                            encoding=None,
+                                            id1=None,
+                                            id2=None,
+                                            parameter=None,
+                                            ip_addr=None,
+                                            port=None,
+                                            scan_argument=None,
+                                            script=None,
+                                            dns_rebinding=None,
+                                            time_based=None,
+                                            attack_type=None,
+                                            target_file=None,
+                                            tool="XSS" 
+                                        ))  
             submit_button.grid(row=5, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
