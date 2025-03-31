@@ -133,10 +133,10 @@ class Dash(ctk.CTk):
         tools_btn.grid(row=3,column=0,padx=10,pady=10)
         label2 = ctk.CTkLabel(self.sidebar,text="Logging",font=("Arial",18))
         label2.grid(row=4,column=0,padx=10,pady=10,sticky="ew")
-        log_btn = ctk.CTkButton(self.sidebar,text="URL Log",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200)
+        log_btn = ctk.CTkButton(self.sidebar,text="URL Log",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200,command=self.tool_logs)
         log_btn.grid(row=5,column=0,padx=10,pady=10)
-        log_btn2 = ctk.CTkButton(self.sidebar,text="Export Log",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200)
-        log_btn2.grid(row=6,column=0,padx=10,pady=10)
+        # log_btn2 = ctk.CTkButton(self.sidebar,text="Export Log",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200)
+        # log_btn2.grid(row=6,column=0,padx=10,pady=10)
         label3 = ctk.CTkLabel(self.sidebar,text="Settings",font=("Arial",18))
         label3.grid(row=7,column=0,padx=10,pady=10,sticky="ew")
         toggl_btn = ctk.CTkButton(self.sidebar,text="Log out",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200)
@@ -452,7 +452,9 @@ class Dash(ctk.CTk):
             self.th_entry.grid(row=1,column=1,padx=10,pady=10,sticky="w")
             word_label = ctk.CTkLabel(self.box_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=2,column=0,padx=10,pady=10,sticky="e")
-            self.word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
+            self.file_list = self.get_files("data/wordlists/dns_enum")
+            self.word_var = ctk.StringVar(value=self.file_list[0] if self.file_list else "No wordlists found")
+            self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
             self.word_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
                                           command=lambda: self.recon_scan(url=domain_entry.get(),port="88",useragent=None,cookies=None,threads=th_entry.get(),wordlists=word_entry.get(),n_result=10,output=None,input_list=None,tool="dns_enum"))  
@@ -605,10 +607,12 @@ class Dash(ctk.CTk):
             pas_label.grid(row=2,column=0,padx=10,pady=10,sticky="e")
             pas_entry  = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             pas_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
-            word_label = ctk.CTkLabel(self.box_frame,text="Enter wordlist path: ",font=("arial",16,"bold"))
+            word_label = ctk.CTkLabel(self.box_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=3,column=0,padx=10,pady=10,sticky="e")
-            word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
-            word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
+            self.file_list = self.get_files("data/wordlists/Api_auth_scan")
+            self.word_var = ctk.StringVar(value=self.file_list[0] if self.file_list else "No wordlists found")
+            self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
+            self.word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
                                           command=lambda: self.vuln_scan(url=domain_entry.get(),username=u_entery.get(),password=pas_entry.get(),wordlists=word_entry.get(),threads=None,token=None,cookie=None,useragent=None,http_method=None,headers=None,delay=None,keyword_filter=None,encoding=None,id1=None,id2=None,parameter=None,ip_addr=None,port=None,scan_argument=None,script=None,dns_rebinding=None,time_based=None,attack_type=None,target_file=None,tool="Api_Auth_scan"))  
             submit_button.grid(row=4, columnspan=2, pady=15)
@@ -632,10 +636,12 @@ class Dash(ctk.CTk):
             thread_label.grid(row=2,column=0,padx=10,pady=10,sticky="e")
             thread_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             thread_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
-            word_label = ctk.CTkLabel(self.box_frame,text="Enter wordlists : ",font=("arial",16,"bold"))
+            word_label = ctk.CTkLabel(self.box_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=3,column=0,padx=10,pady=10,sticky="e")
-            word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
-            word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
+            self.file_list = self.get_files("data/wordlists/Api_testing")
+            self.word_var = ctk.StringVar(value=self.file_list[0] if self.file_list else "No wordlists found")
+            self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
+            self.word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
                                           command=lambda: self.vuln_scan(url=domain_entry.get(),username=None,password=None,wordlists=word_entry.get(),threads=thread_entry.get(),token=token_entry.get(),cookie=None,useragent=None,http_method=None,headers=None,delay=None,keyword_filter=None,encoding=None,id1=None,id2=None,parameter=None,ip_addr=None,port=None,scan_argument=None,script=None,dns_rebinding=None,time_based=None,attack_type=None,target_file=None,tool="API_test"))  
             submit_button.grid(row=4, columnspan=2, pady=15)
@@ -655,10 +661,12 @@ class Dash(ctk.CTk):
             user_name.grid(row=1,column=0,padx=10,pady=10,sticky="e")
             user_entry= ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             user_entry.grid(row=1,column=1,padx=10,pady=10,sticky="w")
-            word_label = ctk.CTkLabel(self.box_frame,text="Enter wordlist path : ",font=("arial",16,"bold"))
+            word_label = ctk.CTkLabel(self.box_frame,text="Wordlist path",font=("arial",16,"bold"))
             word_label.grid(row=2,column=0,padx=10,pady=10,sticky="e")
-            word_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
-            word_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
+            self.file_list = self.get_files("data/wordlists/Bruteforce")
+            self.word_var = ctk.StringVar(value=self.file_list[0] if self.file_list else "No wordlists found")
+            self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
+            self.word_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
             pu_label = ctk.CTkLabel(self.box_frame,text="Param username : ",font=("arial",16,"bold"))
             pu_label.grid(row=3,column=0,padx=10,pady=10,sticky="e")
             pu_entry =ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
@@ -712,10 +720,12 @@ class Dash(ctk.CTk):
             delay_label.grid(row=5, column=0, padx=10, pady=(10, 10), sticky="e")
             self.delay_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16))
             self.delay_entry.grid(row=5, column=1, padx=10, pady=(10, 10), sticky="w")
-            wordlist_label = ctk.CTkLabel(self.box_frame, text="Path to wordlist:", font=("arial", 16, "bold"))
-            wordlist_label.grid(row=6, column=0, padx=10, pady=(10, 10), sticky="e")
-            self.wordlist_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16))
-            self.wordlist_entry.grid(row=6, column=1, padx=10, pady=(10, 10), sticky="w")
+            word_label = ctk.CTkLabel(self.box_frame,text="Wordlist path",font=("arial",16,"bold"))
+            word_label.grid(row=6,column=0,padx=10,pady=10,sticky="e")
+            self.file_list = self.get_files("data/wordlists/CommandInjection")
+            self.word_var = ctk.StringVar(value=self.file_list[0] if self.file_list else "No wordlists found")
+            self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
+            self.word_entry.grid(row=6,column=1,padx=10,pady=10,sticky="w")
             threads_label = ctk.CTkLabel(self.box_frame, text="Number of threads:", font=("arial", 16, "bold"))
             threads_label.grid(row=7, column=0, padx=10, pady=(10, 10), sticky="e")
             self.threads_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16))
@@ -1006,6 +1016,50 @@ class Dash(ctk.CTk):
             self.log_label = ctk.CTkLabel(log_frame,text="Script Log",font=("arial",20,"bold"),justify="left",anchor="w")
             self.log_label.grid(row=0,columnspan=2,padx=20,pady=(20,5),sticky="w")
   
+    def tool_logs(self): 
+        if self.content_frame: 
+            self.content_frame.destroy()
+        log_dir = os.path.join(os.getcwd(), "logs")  # Use os.path.join for cross-platform support
+        if not os.path.exists(log_dir):
+            print(f"[!] Log directory does not exist: {log_dir}")
+            return  # Exit if the directory is missing
+
+        files = [file for file in os.listdir(log_dir) if os.path.isfile(os.path.join(log_dir, file))]
+
+        self.content_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e", height=500)
+        self.content_frame.grid(row=0,column=1,padx=(5,20),pady=20,sticky="nsew")
+        self.content_frame.grid_columnconfigure(0,weight=1)
+        label = ctk.CTkLabel(self.content_frame,text="Log files",font=("arial",30,"bold"))
+        label.grid(row=1,columnspan=2,padx=10,pady=10,sticky="nsew")
+        for i, file in enumerate(files,2):
+            file_button = ctk.CTkButton(self.content_frame, text=file, command=lambda f=file: self.open_log(f))
+            file_button.grid(row=i,columnspan=2,padx=10,pady=10,sticky="nsew") # Display buttons for each log file
+
+    def open_log(self, filename):
+        log_path = os.path.join(os.getcwd(), "logs", filename)
+        try:
+            if self.content_frame: 
+                self.content_frame.destroy()
+            
+            with open(log_path, "r") as file:
+                content = file.read()
+            
+            self.content_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
+            self.content_frame.grid(row=0, column=1, padx=(5,20), pady=20, sticky="nsew")  # Add this line
+            self.content_frame.grid_columnconfigure(0,weight=1)
+            self.back = ctk.CTkButton(self.content_frame, text="Back", font=("arial", 20, "bold"),
+                                    height=40, width=300, command=self.tool_logs)
+            self.back.grid(row=0, columnspan=2, padx=10, pady=10)
+            
+            frame_log = ctk.CTkScrollableFrame(self.content_frame,width=300,height=500)
+            frame_log.grid(row=1,columnspan=2,padx=10,pady=10,sticky="nsew")
+            self.file_content = ctk.CTkLabel(frame_log, corner_radius=10, text=content,
+                                            font=("arial", 20, "bold"), wraplength=500, justify="left",height=40)
+            self.file_content.grid(row=0, columnspan=2, padx=10, pady=10)
+            
+        except Exception as e:
+            print(f"[!] Error opening log {filename}: {e}")
+
 
     def framefortool(self,title):
         if hasattr(self, "content_frame") and self.content_frame:  
