@@ -3,6 +3,8 @@ from tkinter import messagebox
 from dotenv import load_dotenv
 import requests
 import os
+import json
+import secrets
 
 load_dotenv()
 # Initialize main app
@@ -10,6 +12,9 @@ ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("blue")  
 
 APP_URL = os.getenv("APP_URL")
+SESSION_FILE = "session.json"
+
+
 
 class AuthApp(ctk.CTk):
     def __init__(self):
@@ -59,41 +64,110 @@ class AuthApp(ctk.CTk):
         switch_to_login = ctk.CTkButton(self.frame_register, text="Back to Login", fg_color="transparent",width=300, height=40, command=self.show_login)
         switch_to_login.pack(pady=5)
 
+    @staticmethod
+    def load_session():
+        """Load session token from JSON file."""
+        if os.path.exists(SESSION_FILE):
+            with open(SESSION_FILE, "r") as f:
+                return json.load(f).get("token")
+        return None
+
+    @staticmethod
+    def save_session(token):
+        """Save session token to a JSON file."""
+        session_data = {"token": token}
+        with open(SESSION_FILE, "w") as f:
+            json.dump(session_data, f)
+
+    def verify_session(self):
+        """Send request to server to verify session token."""
+        token = self.load_session()
+        if not token:
+            return False  # No stored token found, require login
+
+        headers = {"Authorization": token}
+        response = requests.get(f"{APP_URL}/verify", headers=headers)
+
+        if response.status_code == 200:
+            print("[+] Session verified successfully.")
+            return True
+        else:
+            print("[-] Invalid session, requiring new login.")
+            return False
+
     def login_action(self):
-        try: 
+        try:
+            # Check if a valid session already exists
+            existing_token = self.load_session()
+            if existing_token:
+                print("[+] Using existing session token.")
+                messagebox.showinfo("Already Logged In", "Session is still active.")
+                return  # Skip login process if session is valid
+
             email = self.login_email.get()
             password = self.login_password.get()
-            response = requests.post(f"{APP_URL}/login",json={"email":email,"password":password},headers=self.headers)
-            if response.status_code == 200:                
+
+            response = requests.post(f"{APP_URL}/login", json={"email": email, "password": password}, headers=self.headers)
+
+            if response.status_code == 200:
+                token = response.json().get("token")
+
+                # If no token is received, generate a new random one
+                if not token:
+                    print("[!] No token from server, generating a new one.")
+                    token = secrets.token_hex(32)  # Generate 64-character hex token
+
+                self.save_session(token)  # Save token locally
+
                 messagebox.showinfo("Login Successful", "Welcome back!")
                 self.frame_login.destroy()
                 self.withdraw()
-                dash_win= Dash()
+                dash_win = Dash()
                 dash_win.mainloop()
-                
+
             else:
                 messagebox.showerror("Login Failed", "Invalid email or password")
-        except KeyboardInterrupt : 
-            print("[i] Keyboard Interrupted")
-        except requests.RequestException as re: 
-            messagebox.showerror("Error",re)
-        except Exception as e: 
-            print("[!] Error: ",e)
+
+        except requests.RequestException as re:
+            messagebox.showerror("Error", str(re))
+        except Exception as e:
+            print("[!] Error:", e)
 
     def register_action(self):
         try:
-            username = self.reg_username.get()
-            email = self.reg_email.get()
+            username = self.reg_username.get().strip()
+            email = self.reg_email.get().strip()
             password = self.reg_password.get()
             password2 = self.reg_password2.get()
-            response = requests.post(f"{APP_URL}/register",json={"username":username,"email":email,"password":password,"password-confirmation":password2},headers=self.headers)
+            if not username or not email or not password or not password2:
+                messagebox.showerror("Registration Failed", "All fields are required!")
+                return
+
+            if password != password2:
+                messagebox.showerror("Registration Failed", "Passwords do not match!")
+                return
+            payload = {
+                "username": username,
+                "email": email,
+                "password": password,
+                "password-confirmation": password2
+            }
+            response = requests.post(f"{APP_URL}/register", json=payload, headers=self.headers)
             if response.status_code == 201:
                 messagebox.showinfo("Registration Successful", "You can now log in!")
                 self.show_login()
             else:
-                messagebox.showerror("Registration Failed", "All fields are required!")
+                try:
+                    error_msg = response.json().get("error", "Registration failed, please try again.")
+                except json.JSONDecodeError:
+                    error_msg = "Registration failed, please check your input."
+
+                messagebox.showerror("Registration Failed", error_msg)
+
         except requests.RequestException as re: 
-            messagebox.showerror("Error",re)
+            messagebox.showerror("Error", str(re))
+        except Exception as e:
+            print("[!] Error:", e)
 
 class Dash(ctk.CTk): 
     def __init__(self):
@@ -614,7 +688,32 @@ class Dash(ctk.CTk):
             self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
             self.word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.vuln_scan(url=domain_entry.get(),username=u_entery.get(),password=pas_entry.get(),wordlists=word_entry.get(),threads=None,token=None,cookie=None,useragent=None,http_method=None,headers=None,delay=None,keyword_filter=None,encoding=None,id1=None,id2=None,parameter=None,ip_addr=None,port=None,scan_argument=None,script=None,dns_rebinding=None,time_based=None,attack_type=None,target_file=None,tool="Api_Auth_scan"))  
+                                          command=lambda: self.vuln_scan(
+                                              url=domain_entry.get(),
+                                              username=u_entery.get(),
+                                              password=pas_entry.get(),
+                                              wordlists=self.word_entry.get(),
+                                              threads=None,
+                                              token=None,
+                                              cookie=None,
+                                              useragent=None,
+                                              http_method=None,
+                                              headers=None,
+                                              delay=None,
+                                              keyword_filter=None,
+                                              encoding=None,
+                                              id1=None,
+                                              id2=None,
+                                              parameter=None,
+                                              ip_addr=None,
+                                              port=None,
+                                              scan_argument=None,
+                                              script=None,
+                                              dns_rebinding=None,
+                                              time_based=None,
+                                              attack_type=None,
+                                              target_file=None,
+                                              tool="Api_Auth_scan"))  
             submit_button.grid(row=4, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -643,7 +742,32 @@ class Dash(ctk.CTk):
             self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
             self.word_entry.grid(row=3,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.vuln_scan(url=domain_entry.get(),username=None,password=None,wordlists=word_entry.get(),threads=thread_entry.get(),token=token_entry.get(),cookie=None,useragent=None,http_method=None,headers=None,delay=None,keyword_filter=None,encoding=None,id1=None,id2=None,parameter=None,ip_addr=None,port=None,scan_argument=None,script=None,dns_rebinding=None,time_based=None,attack_type=None,target_file=None,tool="API_test"))  
+                                          command=lambda: self.vuln_scan(
+                                              url=domain_entry.get(),
+                                              username=None,
+                                              password=None,
+                                              wordlists=self.word_entry.get(),
+                                              threads=thread_entry.get(),
+                                              token=token_entry.get(),
+                                              cookie=None,
+                                              useragent=None,
+                                              http_method=None,
+                                              headers=None,
+                                              delay=None,
+                                              keyword_filter=None,
+                                              encoding=None,
+                                              id1=None,
+                                              id2=None,
+                                              parameter=None,
+                                              ip_addr=None,
+                                              port=None,
+                                              scan_argument=None,
+                                              script=None,
+                                              dns_rebinding=None,
+                                              time_based=None,
+                                              attack_type=None,
+                                              target_file=None,
+                                              tool="API_test"))  
             submit_button.grid(row=4, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=3,columnspan=2,pady=(20,5))
@@ -1323,7 +1447,7 @@ class Dash(ctk.CTk):
             self.file_content.grid(row=0, columnspan=2, padx=10, pady=10)
             
         except Exception as e:
-            print(f"[!] Error opening log {filename}: {e}")
+            messagebox.showerror("Error",e)
 
 
     def framefortool(self,title):
@@ -1448,12 +1572,28 @@ class Dash(ctk.CTk):
         except Exception as e :
             messagebox.showerror("Error",e)
 
-if __name__ == "__main__": 
-    try: 
+if __name__ == "__main__":
+    try:
+        temp_auth = AuthApp() 
+        token = temp_auth.load_session() 
 
-        app = Dash()
+        if token:
+            headers = {"Authorization": token}
+            response = requests.get(f"{APP_URL}/verify", headers=headers)
+
+            if response.status_code == 200:
+                print("[+] Session verified. Opening Dashboard...")
+                app = Dash()  # Open Dashboard
+            else:
+                print("[-] Invalid session. Redirecting to Login.")
+                app = AuthApp()  # Open Login Page
+        else:
+            print("[i] No session found. Redirecting to Login.")
+            app = AuthApp()  # Open Login Page
+
         app.mainloop()
-    except KeyboardInterrupt as ke : 
-        print(f"[!] Keyboard Interrupt")
-    except Exception as e : 
+
+    except KeyboardInterrupt:
+        print("[!] Keyboard Interrupt")
+    except Exception as e:
         print(f"[!] Error: {e}")
