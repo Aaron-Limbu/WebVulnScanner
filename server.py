@@ -3,6 +3,7 @@ from flask_cors import CORS
 from models import db,bcrypt,Users
 import os 
 from dotenv import load_dotenv
+import secrets
 
 
 load_dotenv()
@@ -44,30 +45,49 @@ def register():
     except Exception as e : 
         print("[!] ",e)
 #login route
-@app.route('/login',methods=["POST"])
-def login(): 
-    try: 
-        data = request.get_json()
-        email = data.get("email")
-        password= data.get("password")
-        user = Users.query.filter_by(email=email).first()
-        if user and bcrypt.check_password_hash(user.password_hash,password): 
-            return jsonify({"message":"login successful","role":user.role}),200
-        else : 
-            return jsonify({"error","Invalid email or password"}),401
-    except Exception as e: 
-        print("[!] Error",e)
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    email = data.get('email')
+    password = data.get('password')
 
+    user = Users.query.filter_by(email=email).first()
 
+    if user and bcrypt.check_password_hash(user.password_hash, password):
+        # Generate a new token if the user doesn't have one
+        if not user.token:
+            user.token = secrets.token_hex(32)  # Generate 64-character token
+
+        db.session.commit()  # Save new token to database
+
+        return jsonify({"message": "Login successful", "token": user.token}), 200
+    return jsonify({"error": "Invalid email or password"}), 401
+
+@app.route('/verify', methods=["GET"])
+def verify():
+    token = request.headers.get("Authorization")
+    print(f"[DEBUG] Received token: {token}")  # Debugging line
+
+    if not token:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    user = Users.query.filter_by(token=token).first()
+
+    if user:
+        print(f"[DEBUG] User found: {user.email}")  # Debugging line
+        return jsonify({"message": "Success!", "user": {"email": user.email, "role": user.role}}), 200
+    else:
+        print("[-] Invalid session token")
+        return jsonify({"error": "Invalid session"}), 401
 
 if __name__ == "__main__": 
     try: 
-        os.system('cls')
+        # os.system('cls')
         app.run(debug=True)
     except KeyboardInterrupt : 
         print("[i] Stopping the server")
     except Exception as e: 
         print("[!] Error in server: ",e)
-    except OSError : 
-        os.system('clear')
-        app.run(debug=True)
+    # except OSError : 
+    #     os.system('clear')
+    #     app.run(debug=True)
