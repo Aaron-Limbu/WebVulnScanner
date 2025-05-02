@@ -20,33 +20,35 @@ class ReconProcess:
             try:
                 self.port = [int(p.strip()) for p in str(port).split(",") if p.strip().isdigit()]
             except ValueError:
-                self.port = []  # Default to empty list if invalid port input
+                self.port = []
         else:
             self.port = []
 
         self.cookie = cookie or ""
         self.useragent = useragent or ""
 
-        # Ensure thread is treated as a string before calling strip()
-        if isinstance(thread, int):  
-            self.thread = thread  # Already an integer, no need to strip
-        elif isinstance(thread, str) and thread.strip().isdigit():  
-            self.thread = int(thread.strip())  
-        else:  
-            self.thread = 10  # Default to 10 if invalid input
+        # Thread handling
+        if isinstance(thread, int):
+            self.thread = thread
+        elif isinstance(thread, str) and thread.strip().isdigit():
+            self.thread = int(thread.strip())
+        else:
+            self.thread = 10  # Default value
 
-        # Validate n value
         self.n = n if isinstance(n, int) else 10
+        self.thread = min(self.thread, min(10, multiprocessing.cpu_count()))
 
-        # Ensure thread count doesn't exceed available cores
-        max_threads = min(10, multiprocessing.cpu_count())
-        self.thread = min(self.thread, max_threads)
+        if wordlists:
+            self.wordlists = os.path.join(os.getcwd(), "data", "wordlists", wordlists)
+        else:
+            self.wordlists = ""
 
-        self.wordlists = os.path.join(os.getcwd(), "data", "wordlists", wordlists)
         self.log_update_callback = log_update_callback
         self.log_path = os.path.join(os.getcwd(), "logs", f"{filename}.log")
-        self.output_file = output_file or "output"
-        self.input_list_text = input_list
+
+        self.output_file = output_file or os.path.join(os.getcwd(), "output", "default_output.txt")
+
+        self.input_list_text = input_list or ""
 
 
 
@@ -106,6 +108,14 @@ class ReconProcess:
     def ShodanEnum(self): 
         self._setup_output_redirection()
         """Starts the Shodan Recon tool"""
+        # from src.reconnaissance.shodan_recon import main
+        # def run_main():
+        #     main(ip_addr=self.ip, domain=self.url, query=None, device_query=device, status=status)
+        #     sys.stdout.flush()
+        #     sys.stderr.flush()
+
+        # sr_thread = threading.Thread(target=run_main)
+        # sr_thread.start()
         
         
     def SubDomEnum(self): 
