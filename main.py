@@ -15,7 +15,6 @@ APP_URL = os.getenv("APP_URL")
 SESSION_FILE = "session.json"
 
 
-
 class AuthApp(ctk.CTk):
     def __init__(self):
         super().__init__()
@@ -73,11 +72,12 @@ class AuthApp(ctk.CTk):
         return None
 
     @staticmethod
-    def save_session(token):
-        """Save session token to a JSON file."""
-        session_data = {"token": token}
+    def save_session(token, role):
+        """Save session token and role to a JSON file."""
+        session_data = {"token": token, "role": role}
         with open(SESSION_FILE, "w") as f:
             json.dump(session_data, f)
+
 
     def verify_session(self):
         """Send request to server to verify session token."""
@@ -110,21 +110,21 @@ class AuthApp(ctk.CTk):
             response = requests.post(f"{APP_URL}/login", json={"email": email, "password": password}, headers=self.headers)
 
             if response.status_code == 200:
-                token = response.json().get("token")
+                data = response.json()
+                token = data.get("token")
+                role = data.get("role")  # <- Make sure the server returns role
 
-                # If no token is received, generate a new random one
                 if not token:
                     print("[!] No token from server, generating a new one.")
-                    token = secrets.token_hex(32)  # Generate 64-character hex token
+                    token = secrets.token_hex(32)
 
-                self.save_session(token)  # Save token locally
+                self.save_session(token, role)  # Save both token and role
 
-                messagebox.showinfo("Login Successful", "Welcome back!")
+                messagebox.showinfo("Login Successful", f"Welcome back! Role: {role}")
                 self.frame_login.destroy()
                 self.withdraw()
                 dash_win = Dash()
                 dash_win.mainloop()
-
             else:
                 messagebox.showerror("Login Failed", "Invalid email or password")
 
@@ -168,7 +168,7 @@ class AuthApp(ctk.CTk):
             messagebox.showerror("Error", str(re))
         except Exception as e:
             print("[!] Error:", e)
-
+#UI for Pentesters 
 class Dash(ctk.CTk): 
     def __init__(self):
         super().__init__()
@@ -191,7 +191,7 @@ class Dash(ctk.CTk):
            "API Authentication Scanning","API testing","Bruteforce","Command Injection","CSRF scanning",
            "IDOR scan","LFI scan","NMAP scan","SQL Injection(Error based)","SSRF scan","XEE scan","XSS scan"
         ]
-        
+      
     def show_sidebar(self): 
         self.sidebar = ctk.CTkFrame(self,corner_radius=10,width=150,fg_color="transparent")
         self.sidebar.grid(row=0,column=0,sticky="ns",padx=20,pady=20)
@@ -213,7 +213,7 @@ class Dash(ctk.CTk):
         # log_btn2.grid(row=6,column=0,padx=10,pady=10)
         label3 = ctk.CTkLabel(self.sidebar,text="Settings",font=("Arial",18))
         label3.grid(row=7,column=0,padx=10,pady=10,sticky="ew")
-        toggl_btn = ctk.CTkButton(self.sidebar,text="Log out",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200)
+        toggl_btn = ctk.CTkButton(self.sidebar,text="Log out",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200,command=self.logout_action)
         toggl_btn.grid(row=8,column=0,padx=10,pady=10)
 
         clabel = ctk.CTkLabel(self.sidebar,text="Created by:\n Aaron Limbu",font=("Arial",10))
@@ -301,43 +301,94 @@ class Dash(ctk.CTk):
             )
             desc_label.grid(row=i*2+1,column=0,padx=15,pady=(0,10),sticky="w")
     
-    def show_programmes(self): 
-        if self.content_frame: 
+    def show_programmes(self):
+        if self.content_frame:
             self.content_frame.destroy()
-        self.content_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e")
-        self.content_frame.grid_columnconfigure(0,weight=1)
-        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=(5,20), pady=20)
-        title_label = ctk.CTkLabel(self.content_frame,text="Programmes",font=("Arial",40,"bold"),text_color="white")
-        title_label.grid(row=0,column=0,padx=30,pady=(20,5),sticky="n")
-        sub_tlabel = ctk.CTkLabel(self.content_frame,text="List of Ongoing programmes",font=("Arial",20),text_color="#AAAAAA")
-        sub_tlabel.grid(row=1,column=0,padx=30,pady=0,sticky="n")
-        programmes = [
-            ('test1', 'this is a test program'),
-            ('test2','this is a test program 2')
-        ]
 
-        self.programme_list = ctk.CTkFrame(self.content_frame)
-        self.programme_list.grid(row=2, column=0, padx=25, pady=10, sticky="nsew")
-        self.content_frame.rowconfigure(2, weight=1)
+        self.content_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color="#1e1e1e", height=550, width=550)
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 20), pady=20)
+        self.content_frame.grid_columnconfigure(0, weight=1)
+        title_label = ctk.CTkLabel(self.content_frame, text="Dashboard", font=("Arial", 32, "bold"), text_color="white")
+        title_label.grid(row=0, column=0, sticky="w", padx=20, pady=(10, 5))
 
-        nj = 0  # Initialize `nj` before the loop
+        subheading = ctk.CTkLabel(self.content_frame, text="Pentesting Programmes Overview", font=("Arial", 16), text_color="#cccccc")
+        subheading.grid(row=1, column=0, sticky="w", padx=20)
 
-        for i, (name, description) in enumerate(programmes):
-            j = nj + 0  # This is unnecessary, just use `j = nj`
+        programmes_frame = ctk.CTkFrame(self.content_frame, fg_color="#2e2e2e", corner_radius=10)
+        programmes_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
+        programmes_frame.grid_columnconfigure(0, weight=1)  # Expand child cards
 
-            programme_label = ctk.CTkLabel(self.programme_list, text=name, font=("Arial", 20, "bold"))
-            programme_label.grid(row=i * 3, column=0, padx=10, pady=10)
+        token = self.load_session()
+        programmes = []
+        if token:
+            try:
+                res = requests.get(f"{APP_URL}/programmes", headers={"Authorization": token})
+                if res.status_code == 200:
+                    programmes = res.json()
+                else:
+                    print("Failed to fetch programmes:", res.json())
+            except Exception as e:
+                print("Error while fetching programmes:", e)
 
-            desc_label = ctk.CTkLabel(self.programme_list, text=description, font=("Arial", 15))
-            desc_label.grid(row=i * 3 + 1, column=0, padx=10, pady=10)
+        if not programmes:
+            empty_label = ctk.CTkLabel(programmes_frame, text="No programmes added.", font=("Arial", 14), text_color="#cccccc")
+            empty_label.grid(row=0, column=0, padx=20, pady=20)
+        else:
+            for i, prog in enumerate(programmes):
+                card = ctk.CTkFrame(programmes_frame, fg_color="#242424", corner_radius=16)
+                card.grid(row=i, column=0, padx=10, pady=12, sticky="ew")
+                card.grid_columnconfigure(0, weight=1)
+                ctk.CTkLabel(
+                    card, text=prog['programme_name'], font=("Segoe UI", 20, "bold"),
+                    text_color="white"
+                ).grid(row=0, column=0, sticky="w", padx=20, pady=(12, 4))
+                ctk.CTkLabel(
+                    card,text=f"Publisher: {prog['username']}",font=("Segoe UI",13),text_color="white"
+                ).grid(row=0,column=1,sticky="w",padx=10,pady=(12,4))
+                ctk.CTkLabel(
+                    card, text=f"Domain Name: {prog['domain_name']}", font=("Segoe UI", 14),
+                    text_color="#cccccc"
+                ).grid(row=1, column=0, sticky="w", padx=20, pady=2)
+                ctk.CTkLabel(
+                    card, text=f"Scopes:", font=("Segoe UI", 13),
+                    text_color="#aaaaaa"
+                ).grid(row=2, column=0, sticky="w", padx=20, pady=2)
+                ctk.CTkLabel(
+                    card, text=f"{prog['scope']}", font=("Segoe UI", 13),
+                    text_color="#aaaaaa"
+                ).grid(row=3, columnspan=2, sticky="w", padx=50, pady=2)
+                out_scope = prog.get('outofscope', '').strip()
+                if out_scope:
+                    ctk.CTkLabel(
+                        card, text=f"Out of Scope: ", font=("Segoe UI", 13),
+                        text_color="#999999"
+                    ).grid(row=4, column=0, sticky="w", padx=20, pady=2)
+                    ctk.CTkLabel(
+                        card, text=f"{out_scope}", font=("Segoe UI", 13),
+                        text_color="#999999"
+                    ).grid(row=5, columnspan=2, sticky="w", padx=50, pady=2)
+                ctk.CTkLabel(
+                    card, text=f"{prog['start_date']} → {prog['end_date']}", font=("Segoe UI", 12),
+                    text_color="#888888"
+                ).grid(row=6, column=0, sticky="w", padx=20, pady=2)
+                status_color = "#44cc66" if prog['status'] == "Completed" else "#ffaa00" if prog['status'] == "Pending" else "#00bfff"
+                ctk.CTkLabel(
+                    card, text=f"Status: {prog['status']}", font=("Segoe UI", 12, "bold"),
+                    text_color=status_color
+                ).grid(row=7, column=0, sticky="w", padx=20, pady=(4, 2))
+                ctk.CTkLabel(
+                    card, text=f"Created: {prog['created_at']}", font=("Segoe UI", 11),
+                    text_color="#777777"
+                ).grid(row=8, column=0, sticky="w", padx=20, pady=(0, 12))
+                # Join Button
+                join_button = ctk.CTkButton(
+                    card, text="Join", font=("Segoe UI", 12, "bold"),
+                    command=lambda prog_id=prog['id']: self.join_programme(prog_id),
+                    fg_color="#007acc", hover_color="#005f99", text_color="white",
+                    corner_radius=8, width=80
+                )
+                join_button.grid(row=9, column=1, sticky="e", padx=20, pady=(0, 12))
 
-            nj = j + 1  # Increment `nj`
-
-            # Remove `value=nj`, it's not a valid parameter
-            btn = ctk.CTkButton(self.programme_list, text="Start", command=lambda n=nj: print(f"Button {n} clicked"))
-            btn.grid(row=i * 3 + 2, column=0, padx=10, pady=10)
-            
-        
     def show_tools(self): 
         if self.content_frame: 
             self.content_frame.destroy()
@@ -590,9 +641,53 @@ class Dash(ctk.CTk):
 
 
         if n.lower() in ["shodan recon"]: 
-            self.framefortool()
-            url_label = ctk.CTkLabel(self.content_frame,text="Shodan Reconnaissance",font=("arial",40,"bold"))
-            url_label.grid(row=1,columnspan=2,padx=25, pady=10)   
+            self.framefortool("Shodan Recon")
+            # ip_label = ctk.CTkLabel(self.box_frame, text="IP Address:", font=("arial", 16, "bold"))
+            # ip_label.grid(row=2, column=0, padx=10, pady=5, sticky="e")
+            # ip_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16), height=40)
+            # ip_entry.grid(row=2, column=1, padx=10, pady=5, sticky="w")
+            # domain_label = ctk.CTkLabel(self.box_frame, text="Domain:", font=("arial", 16, "bold"))
+            # domain_label.grid(row=3, column=0, padx=10, pady=5, sticky="e")
+            # domain_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16), height=40)
+            # domain_entry.grid(row=3, column=1, padx=10, pady=5, sticky="w")
+            # query_label = ctk.CTkLabel(self.box_frame, text="Search Query:", font=("arial", 16, "bold"))
+            # query_label.grid(row=4, column=0, padx=10, pady=5, sticky="e")
+            # query_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16), height=40)
+            # query_entry.grid(row=4, column=1, padx=10, pady=5, sticky="w")
+            # device_label = ctk.CTkLabel(self.box_frame, text="Device Query:", font=("arial", 16, "bold"))
+            # device_label.grid(row=5, column=0, padx=10, pady=5, sticky="e")
+            # device_entry = ctk.CTkEntry(self.box_frame, width=300, font=("arial", 16), height=40)
+            # device_entry.grid(row=5, column=1, padx=10, pady=5, sticky="w")
+            # submit_button = ctk.CTkButton(
+            #     self.box_frame,
+            #     text="Start Recon",
+            #     font=("arial", 20, "bold"),
+            #     width=400,
+            #     height=40,
+            #     command=lambda: self.recon_scan(
+            #         url=domain_entry.get(),
+            #         port=None,
+            #         wordlists=None,
+            #         useragent=None,
+            #         cookies=None,
+            #         threads=None,
+            #         n_result=None,
+            #         output=None,
+            #         input_list=None,
+            #         tool="shodan_recon",
+            #         ip_addr=ip_entry.get(),
+            #         domain=domain_entry.get(),
+            #         query=query_entry.get(),
+            #         device_query=device_entry.get(),
+            #         status=None
+            #     )
+            # )
+            # submit_button.grid(row=7, columnspan=2, pady=15)
+            # log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
+            # log_frame.grid(row=8, columnspan=2, pady=(20, 5))
+            # log_frame.columnconfigure(0, weight=1)
+            # self.log_label = ctk.CTkLabel(log_frame, text="Script Log", font=("arial", 20, "bold"), justify="left", anchor="w")
+            # self.log_label.grid(row=0, columnspan=2, padx=20, pady=(20, 5), sticky="w")
 
 
         if n.lower() in ["subdomain enumeration"]: 
@@ -660,7 +755,7 @@ class Dash(ctk.CTk):
             domain_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             domain_entry.grid(row=2,column=1,padx=10,pady=(40,20),sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.recon_scan(url=query_entry.get(),port=None,wordlists=None,useragent=None,cookies=None,threads=None,n_result=None,output=None,input_list=None,tool="who_is"))  
+                                          command=lambda: self.recon_scan(url=domain_entry.get(),port=None,wordlists=None,useragent=None,cookies=None,threads=None,n_result=None,output=None,input_list=None,tool="who_is"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -1481,7 +1576,7 @@ class Dash(ctk.CTk):
     def recon_scan(self,url,port,tool,wordlists,useragent,cookies,threads,n_result,output,input_list):
         try: 
             from src.GUI.process.recon_process import ReconProcess
-            recon_process = ReconProcess(url=url,port=port,useragent=useragent,cookie=cookies,thread=int(threads) ,wordlists=wordlists,n=n_result,output_file=output,input_list=input_list,log_update_callback=self.log_update_callback,filename=tool)
+            recon_process = ReconProcess(url=url,port=port,useragent=useragent,cookie=cookies,thread=threads if threads is not None else "10",wordlists=wordlists,n=n_result,output_file=output,input_list=input_list,log_update_callback=self.log_update_callback,filename=tool)
             if tool=="banner_grabber": 
                 recon_process.BannerGrabber()
             elif tool == "dir_enum": 
@@ -1521,7 +1616,7 @@ class Dash(ctk.CTk):
             vuln_scan = VulnScanProcess(url =url ,
                                         username =username,
                                         password = password,
-                                        wordlists_path =wordlists,
+                                        wordlist_path =wordlists,
                                         thread=threads,
                                         tokens = token,
                                         cookies =cookie,
@@ -1571,25 +1666,363 @@ class Dash(ctk.CTk):
 
         except Exception as e :
             messagebox.showerror("Error",e)
+    def logout_action(self):
+        try:
+            token = self.load_session()  # Load token from local session file
 
-if __name__ == "__main__":
-    try:
-        temp_auth = AuthApp() 
-        token = temp_auth.load_session() 
+            if not token:
+                messagebox.showinfo("Logout", "No active session found.")
+                return
 
-        if token:
             headers = {"Authorization": token}
-            response = requests.get(f"{APP_URL}/verify", headers=headers)
+
+            response = requests.get(f"{APP_URL}/logout", headers=headers)
 
             if response.status_code == 200:
-                print("[+] Session verified. Opening Dashboard...")
-                app = Dash()  # Open Dashboard
+                # Successfully logged out
+                self.clear_session()
+                messagebox.showinfo("Logout Successful", "You have been logged out.")
+                self.destroy()  # Close the app or redirect to login window
             else:
-                print("[-] Invalid session. Redirecting to Login.")
-                app = AuthApp()  # Open Login Page
+                messagebox.showerror("Logout Failed", "Could not log out. Please try again.")
+
+        except requests.RequestException as e:
+            messagebox.showerror("Network Error", str(e))
+        except Exception as e:
+            print("[!] Logout Error:", e)
+    
+    @staticmethod
+    def load_session():
+        """Load session token from JSON file."""
+        if os.path.exists(SESSION_FILE):
+            with open(SESSION_FILE, "r") as f:
+                return json.load(f).get("token")
+        return None
+
+    def clear_session(self):
+        """Clear the session token stored locally."""
+        if os.path.exists(SESSION_FILE):
+            os.remove(SESSION_FILE)
+
+
+#UI for Blue Teamer and Developer
+class BlueT(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.geometry("800x650")
+        self.title("Blue Teamer/developer Panel")
+        self.resizable(False,False)
+        self.content_frame = None 
+        self.box_frame = None 
+        self.show_sidebar()
+        self.show_content()
+
+        
+    @staticmethod
+    def load_session():
+        """Load session token from JSON file."""
+        if os.path.exists(SESSION_FILE):
+            with open(SESSION_FILE, "r") as f:
+                return json.load(f).get("token")
+        return None
+
+    def show_sidebar(self): 
+        self.sidebar = ctk.CTkFrame(self,corner_radius=10,width=150,fg_color="transparent")
+        self.sidebar.grid(row=0,column=0,sticky="ns",padx=20,pady=20)
+        self.sidebar.grid_propagate(False)
+        self.sidebar.grid_columnconfigure(0,weight=1)
+        # label1 = ctk.CTkLabel(self.sidebar,text="Overview",font=("Arial",18))
+        # label1.grid(row=0,column=0,padx=10,pady=10,sticky="ew")
+        # home_btn = ctk.CTkButton(self.sidebar,text="Home",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",command=self.show_content,height=30,width=200)
+        # home_btn.grid(row=1,column=0,padx=10,pady=10)
+        # UH_btn = ctk.CTkButton(self.sidebar,text="Programmes",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",command=self.show_programmes,height=30,width=200)
+        # UH_btn.grid(row=2,column=0,padx=10,pady=10)
+        # tools_btn = ctk.CTkButton(self.sidebar,text="Tools",font=("Arial",14),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",command=self.show_tools,height=30,width=200 )
+        # tools_btn.grid(row=3,column=0,padx=10,pady=10)
+        label2 = ctk.CTkLabel(self.sidebar,text="Review",font=("Arial",18))
+        label2.grid(row=4,column=0,padx=10,pady=10,sticky="ew")
+        log_btn = ctk.CTkButton(self.sidebar,text="Security Review",font=("Arial",13),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=250,command=self.security_review)
+        log_btn.grid(row=5,column=0,padx=10,pady=10)
+        # log_btn2 = ctk.CTkButton(self.sidebar,text="Export Log",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200)
+        # log_btn2.grid(row=6,column=0,padx=10,pady=10)
+        label3 = ctk.CTkLabel(self.sidebar,text="Settings",font=("Arial",18))
+        label3.grid(row=7,column=0,padx=10,pady=10,sticky="ew")
+        toggl_btn = ctk.CTkButton(self.sidebar,text="Log out",font=("Arial",15),fg_color="transparent",corner_radius=30,hover_color="#1e1e1e",height=30,width=200,command=self.logout_action)
+        toggl_btn.grid(row=8,column=0,padx=10,pady=10)
+
+        clabel = ctk.CTkLabel(self.sidebar,text="Created by:\n Aaron Limbu",font=("Arial",10))
+        clabel.grid(row=9,column=0,padx=10,pady=(80,10))
+        # label3 = ctk.CTkLabel(self.sidebar,text="Settings",font=("Arial",20))
+        # label3.grid(row=6,column=0,padx=10,pady=10,sticky="ew")
+        # toggl_btn = ctk.CTkButton(self.sidebar,text="Log out",font=("Arial",15))
+        # toggl_btn.grid(row=7,column=0,padx=10,pady=10)
+    def show_content(self):
+        if self.content_frame:
+            self.content_frame.destroy()
+
+        self.content_frame = ctk.CTkScrollableFrame(self, corner_radius=10, fg_color="#1e1e1e", height=550, width=550)
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 20), pady=20)
+        self.content_frame.grid_columnconfigure(0, weight=1)
+
+        title_label = ctk.CTkLabel(self.content_frame, text="Dashboard", font=("Arial", 32, "bold"), text_color="white")
+        title_label.grid(row=0, column=0, sticky="w", padx=20, pady=(10, 5))
+
+        subheading = ctk.CTkLabel(self.content_frame, text="Pentesting Programmes Overview", font=("Arial", 16), text_color="#cccccc")
+        subheading.grid(row=1, column=0, sticky="w", padx=20)
+
+        programmes_frame = ctk.CTkFrame(self.content_frame, fg_color="#2e2e2e", corner_radius=10)
+        programmes_frame.grid(row=2, column=0, padx=20, pady=20, sticky="nsew")
+        programmes_frame.grid_columnconfigure(0, weight=1)  # Expand child cards
+
+        token = self.load_session()
+        programmes = []
+        if token:
+            try:
+                res = requests.get(f"{APP_URL}/programmes", headers={"Authorization": token})
+                if res.status_code == 200:
+                    programmes = res.json()
+                else:
+                    print("Failed to fetch programmes:", res.json())
+            except Exception as e:
+                print("Error while fetching programmes:", e)
+
+        if not programmes:
+            empty_label = ctk.CTkLabel(programmes_frame, text="No programmes added.", font=("Arial", 14), text_color="#cccccc")
+            empty_label.grid(row=0, column=0, padx=20, pady=20)
         else:
-            print("[i] No session found. Redirecting to Login.")
-            app = AuthApp()  # Open Login Page
+            for i, prog in enumerate(programmes):
+                card = ctk.CTkFrame(programmes_frame, fg_color="#242424", corner_radius=16)
+                card.grid(row=i, column=0, padx=10, pady=12, sticky="ew")
+                card.grid_columnconfigure(0, weight=1)
+                ctk.CTkLabel(
+                    card, text=prog['programme_name'], font=("Segoe UI", 20, "bold"),
+                    text_color="white"
+                ).grid(row=0, column=0, sticky="w", padx=20, pady=(12, 4))
+                ctk.CTkLabel(
+                    card,text=f"Publisher: {prog['username']}",font=("Segoe UI",13),text_color="white"
+                ).grid(row=0,column=1,sticky="w",padx=10,pady=(12,4))
+                ctk.CTkLabel(
+                    card, text=f"Domain Name: {prog['domain_name']}", font=("Segoe UI", 14),
+                    text_color="#cccccc"
+                ).grid(row=1, column=0, sticky="w", padx=20, pady=2)
+                ctk.CTkLabel(
+                    card, text=f"Scopes:", font=("Segoe UI", 13),
+                    text_color="#aaaaaa"
+                ).grid(row=2, column=0, sticky="w", padx=20, pady=2)
+                ctk.CTkLabel(
+                    card, text=f"{prog['scope']}", font=("Segoe UI", 13),
+                    text_color="#aaaaaa"
+                ).grid(row=3, columnspan=2, sticky="w", padx=50, pady=2)
+                out_scope = prog.get('outofscope', '').strip()
+                if out_scope:
+                    ctk.CTkLabel(
+                        card, text=f"Out of Scope: ", font=("Segoe UI", 13),
+                        text_color="#999999"
+                    ).grid(row=4, column=0, sticky="w", padx=20, pady=2)
+                    ctk.CTkLabel(
+                        card, text=f"{out_scope}", font=("Segoe UI", 13),
+                        text_color="#999999"
+                    ).grid(row=5, columnspan=2, sticky="w", padx=50, pady=2)
+                ctk.CTkLabel(
+                    card, text=f"{prog['start_date']} → {prog['end_date']}", font=("Segoe UI", 12),
+                    text_color="#888888"
+                ).grid(row=6, column=0, sticky="w", padx=20, pady=2)
+                status_color = "#44cc66" if prog['status'] == "Completed" else "#ffaa00" if prog['status'] == "Pending" else "#00bfff"
+                ctk.CTkLabel(
+                    card, text=f"Status: {prog['status']}", font=("Segoe UI", 12, "bold"),
+                    text_color=status_color
+                ).grid(row=7, column=0, sticky="w", padx=20, pady=(4, 2))
+                ctk.CTkLabel(
+                    card, text=f"Created: {prog['created_at']}", font=("Segoe UI", 11),
+                    text_color="#777777"
+                ).grid(row=8, column=0, sticky="w", padx=20, pady=(0, 12))
+        add_programme_button = ctk.CTkButton(self.content_frame, text="Add Programme", command=self.add_programme)
+        add_programme_button.grid(row=3, column=0, sticky="e", padx=20, pady=20)
+        
+    def add_programme(self):
+        """Creates a form to add a new programme inside the content_frame"""
+        # Clear the current content
+        for widget in self.content_frame.winfo_children():
+            widget.destroy()
+        self.content_frame.grid_rowconfigure([4, 5, 6, 7], weight=1)  
+        self.content_frame.grid_columnconfigure([0, 1], weight=1)  
+        title_label = ctk.CTkLabel(self.content_frame, text="Add New Programme", font=("Arial", 24, "bold"), text_color="white")
+        title_label.grid(row=0, column=0, sticky="w", padx=20, pady=(10, 5))
+        back_button = ctk.CTkButton(self.content_frame, text="Back", command=self.show_content)
+        back_button.grid(row=1, column=0, sticky="w", padx=20, pady=10)
+        programme_name_label = ctk.CTkLabel(self.content_frame, text="Programme Name:")
+        programme_name_label.grid(row=2, column=0, padx=20, pady=10, sticky="w")
+        programme_name_entry = ctk.CTkEntry(self.content_frame, width=250)
+        programme_name_entry.grid(row=2, column=1, padx=20, pady=10)
+        domain_name_label = ctk.CTkLabel(self.content_frame, text="Domain Name:")
+        domain_name_label.grid(row=3, column=0, padx=20, pady=10, sticky="w")
+        domain_name_entry = ctk.CTkEntry(self.content_frame, width=250)
+        domain_name_entry.grid(row=3, column=1, padx=20, pady=10)
+        scope_label = ctk.CTkLabel(self.content_frame, text="Scope:")
+        scope_label.grid(row=4, column=0, padx=20, pady=10, sticky="w")
+        scope_text = ctk.CTkTextbox(self.content_frame, height=100, width=250,border_width=1)  
+        scope_text.grid(row=4, column=1, padx=20, pady=10)
+        out_of_scope_label = ctk.CTkLabel(self.content_frame, text="Out of Scope:")
+        out_of_scope_label.grid(row=5, column=0, padx=20, pady=10, sticky="w")
+        out_of_scope_text = ctk.CTkTextbox(self.content_frame, height=100, width=250,border_width=1)  
+        out_of_scope_text.grid(row=5, column=1, padx=20, pady=10)
+        start_date_label = ctk.CTkLabel(self.content_frame, text="Start Date:")
+        start_date_label.grid(row=6, column=0, padx=20, pady=10, sticky="w")
+        start_date_entry = ctk.CTkEntry(self.content_frame, width=250)
+        start_date_entry.grid(row=6, column=1, padx=20, pady=10)
+        end_date_label = ctk.CTkLabel(self.content_frame, text="End Date:")
+        end_date_label.grid(row=7, column=0, padx=20, pady=10, sticky="w")
+        end_date_entry = ctk.CTkEntry(self.content_frame, width=250)
+        end_date_entry.grid(row=7, column=1, padx=20, pady=10)
+        submit_button = ctk.CTkButton(self.content_frame, text="Submit", command=lambda: self.submit_programme(
+            programme_name_entry.get(), domain_name_entry.get(), scope_text.get("1.0", "end-1c"), 
+            out_of_scope_text.get("1.0", "end-1c"), start_date_entry.get(), end_date_entry.get()))
+        submit_button.grid(row=8, column=0, columnspan=2, padx=20, pady=20)
+
+    def submit_programme(self, programme_name, domain_name, scope, out_of_scope, start_date, end_date):
+        """Submit the new programme to the backend"""
+        new_programme = {
+            "programme_name": programme_name,
+            "domain_name": domain_name,
+            "scope": scope,
+            "outofscope": out_of_scope,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+        token = self.load_session()
+        headers = {"Authorization": token}
+        try:
+            res = requests.post(f"{APP_URL}/addprogrammes", json=new_programme, headers=headers)
+            if res.status_code == 201:
+                messagebox.showinfo("Success", "Programme added successfully.")
+                self.show_content()  # Refresh the content to show the new programme
+            else:
+                messagebox.showerror("Error", f"Failed to add programme: {res.json().get('error')}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error while adding programme: {str(e)}")
+    def security_review(self):
+        if self.content_frame:
+            self.content_frame.destroy()
+
+        self.content_frame = ctk.CTkFrame(self, corner_radius=10, fg_color="#1e1e1e", height=550, width=550)
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=(5, 20), pady=20)
+        title = ctk.CTkLabel(self.content_frame, text="Security Review", font=("Arial", 28, "bold"), text_color="white")
+        title.grid(row=0, column=0, sticky="w", padx=20, pady=(20, 5))
+
+        subtitle = ctk.CTkLabel(self.content_frame, text="Vulnerabilities Identified & Recommendations", font=("Arial", 16), text_color="#bbbbbb")
+        subtitle.grid(row=1, column=0, sticky="w", padx=20, pady=(0, 10))
+
+            # Main frame for vulns
+        vulns_frame = ctk.CTkScrollableFrame(self.content_frame, fg_color="#2e2e2e", corner_radius=10, height=500,width=500)
+        vulns_frame.grid(row=2, column=0, padx=20, pady=10, sticky="nsew")
+        self.grid_rowconfigure(2, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        vulnerabilities = [
+                {
+                    "title": "SQL Injection",
+                    "component": "Login Form",
+                    "severity": "High",
+                    "description": "Unsanitized inputs allow attackers to execute arbitrary SQL queries.",
+                    "fix": "Use parameterized queries or ORM methods to avoid direct SQL string concatenation."
+                },
+                {
+                    "title": "Cross-Site Scripting (XSS)",
+                    "component": "Search Field",
+                    "severity": "Medium",
+                    "description": "User input is rendered without proper escaping, allowing script injection.",
+                    "fix": "Sanitize user input and use proper encoding when displaying data in HTML."
+                },
+                {
+                    "title": "Insecure Direct Object Reference (IDOR)",
+                    "component": "User Profile Access",
+                    "severity": "High",
+                    "description": "User can access resources of other users by manipulating URLs.",
+                    "fix": "Implement access control checks on the server-side based on user roles and ownership."
+                }
+            ]
+
+        for i, vuln in enumerate(vulnerabilities):
+            card = ctk.CTkFrame(vulns_frame, fg_color="#1a1a1a", corner_radius=12,width=400)
+            card.grid(row=i, column=0, padx=10, pady=10, sticky="ew")
+            card.grid_columnconfigure(0, weight=1)
+
+                # Severity indicator
+            sev_colors = {"High": "#ff4d4d", "Medium": "#ffaa00", "Low": "#44cc66"}
+            color = sev_colors.get(vuln["severity"], "#999999")
+
+            ctk.CTkLabel(card, text=f"{vuln['title']} (Severity: {vuln['severity']})",wraplength=450, font=("Arial", 18, "bold"), text_color=color).grid(row=0, column=0, sticky="w", padx=10, pady=(10, 5))
+            ctk.CTkLabel(card, text=f"Affected Component: {vuln['component']}",wraplength=450, font=("Arial", 14), text_color="#cccccc").grid(row=1, column=0, sticky="w", padx=10)
+
+            ctk.CTkLabel(card, text="Description:", font=("Arial", 13, "bold"),wraplength=450, text_color="white").grid(row=2, column=0, sticky="w", padx=10, pady=(8, 0))
+            ctk.CTkLabel(card, text=vuln["description"], font=("Arial", 13),wraplength=450, text_color="#aaaaaa",  justify="left").grid(row=3, column=0, sticky="w", padx=10)
+
+            ctk.CTkLabel(card, text="Fix Recommendation:", font=("Arial", 13, "bold"), text_color="white").grid(row=4, column=0, sticky="w", padx=10, pady=(8, 0))
+            ctk.CTkLabel(card, text=vuln["fix"], font=("Arial", 13),wraplength=450, text_color="#88ccff",  justify="left").grid(row=5, column=0, sticky="w", padx=10, pady=(0, 10))
+
+    def logout_action(self):
+        try:
+            token = self.load_session()  # Load token from local session file
+
+            if not token:
+                messagebox.showinfo("Logout", "No active session found.")
+                return
+
+            headers = {"Authorization": token}
+
+            response = requests.get(f"{APP_URL}/logout", headers=headers)
+
+            if response.status_code == 200:
+                # Successfully logged out
+                self.clear_session()
+                messagebox.showinfo("Logout Successful", "You have been logged out.")
+                self.destroy()  # Close the app or redirect to login window
+            else:
+                messagebox.showerror("Logout Failed", "Could not log out. Please try again.")
+
+        except requests.RequestException as e:
+            messagebox.showerror("Network Error", str(e))
+        except Exception as e:
+            print("[!] Logout Error:", e)
+
+    def clear_session(self):
+        """Clear the session token stored locally."""
+        if os.path.exists(SESSION_FILE):
+            os.remove(SESSION_FILE)
+
+if __name__ == "__main__":      
+    try:
+        if not os.path.exists("session.json"):
+            with open("session.json", "w") as f:
+                json.dump({"token": None, "role": None}, f)
+
+        with open("session.json", "r") as f:
+            session_data = json.load(f)
+            token = session_data.get("token")
+            role = session_data.get("role")
+        if not token or not role:
+            print("[!] No valid session found. Redirecting to Login.")
+            app = AuthApp()
+            app.mainloop()
+            exit()
+
+        headers = {"Authorization": token}
+        response = requests.get(f"{APP_URL}/verify", headers=headers)
+
+        if response.status_code == 200:
+            print(f"[+] Session verified. Role: {role}")
+            if role == "blue_teamer" or role == "developer":
+                app = BlueT()
+            elif role == "pentester":
+                app = Dash()
+            # elif role == "admin":
+            #     app = AdminDashboard(token=token, role=role)
+            else:
+                print("[!] Unrecognized role. Redirecting to Login.")
+                app = AuthApp()
+        else:
+            print("[-] Invalid session. Redirecting to Login.")
+            app = AuthApp()
 
         app.mainloop()
 
