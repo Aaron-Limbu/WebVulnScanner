@@ -27,7 +27,7 @@ class DomainEnum:
         print(f"[i] Searching Google for subdomains of {self.domain}...")
         query = f"site:{self.domain} -www"
         try:
-            for result in search(query, num_results=20):
+            for result in search(query, stop=20):
                 match = re.search(r"https?://([\w.-]+)\."+re.escape(self.domain), result)
                 if match:
                     subdomain = match.group(1) + "." + self.domain

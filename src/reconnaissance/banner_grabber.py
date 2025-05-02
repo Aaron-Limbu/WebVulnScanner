@@ -11,7 +11,7 @@ class Logger:
             format="%(asctime)s - %(levelname)s - %(message)s",
             handlers=[
                 logging.FileHandler(log_filename),
-                logging.StreamHandler()  # Optionally log to console as well
+                logging.StreamHandler()
             ]
         )
 
@@ -37,8 +37,8 @@ class BannerGrabber:
 
     def run(self):
         try:
-            # log_path = f"{os.getcwd()}\\logs\\banner_grabber.log"  # Set the correct log path
-            # Logger.setup_logger("banner.log")  # Set up the logger with the correct file path
+            # log_path = f"{os.getcwd()}\\logs\\banner_grabber.log"  
+            # Logger.setup_logger("banner.log")  
 
             ip = socket.gethostbyname(self.target)
             print(f"[+] Target resolved to IP: {ip}")

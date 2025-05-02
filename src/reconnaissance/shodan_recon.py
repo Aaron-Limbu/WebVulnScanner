@@ -9,7 +9,7 @@ import argparse
 class Logger:
     @staticmethod
     def setup_logger(log_file="shodan.log"):
-        logging.basicConfig(filename=log_file, level=logging.INFO, 
+        logging.basicConfig(filename=log_file, level=logging.INFO,
                             format="%(asctime)s - %(levelname)s - %(message)s")
 
 
@@ -117,7 +117,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def main():
+def main(ip_addr=None, domain=None, query=None, device_query=None, status=False):
     try:
         Logger.setup_logger()
         load_dotenv()
@@ -128,27 +128,26 @@ def main():
             exit("Error: API key missing. Check your .env file.")
 
         shodan_handler = ShodanHandler(API_KEY)
-        args = parse_arguments()
 
-        if args.ip_addr:
+        if ip_addr:
             print("[+] Host Information:")
-            print(json.dumps(shodan_handler.get_host_info(args.ip_addr), indent=4))
+            print(json.dumps(shodan_handler.get_host_info(ip_addr), indent=4))
             print("\n[+] Open Ports:")
-            print(json.dumps(shodan_handler.get_open_ports(args.ip_addr), indent=4))
+            print(json.dumps(shodan_handler.get_open_ports(ip_addr), indent=4))
 
-        if args.domain:
+        if domain:
             print("\n[+] Domain Information:")
-            print(json.dumps(shodan_handler.get_domain_info(args.domain), indent=4))
+            print(json.dumps(shodan_handler.get_domain_info(domain), indent=4))
 
-        if args.query:
+        if query:
             print("\n[+] Vulnerability Search Results:")
-            print(json.dumps(shodan_handler.search_vulns(args.query), indent=4))
+            print(json.dumps(shodan_handler.search_vulns(query), indent=4))
 
-        if args.device_query:
+        if device_query:
             print("\n[+] Device Search Results:")
-            print(json.dumps(shodan_handler.find_devices(args.device_query), indent=4))
+            print(json.dumps(shodan_handler.find_devices(device_query), indent=4))
 
-        if args.status:
+        if status:
             print("\n[+] Account Status:")
             print(json.dumps(shodan_handler.get_account_status(), indent=4))
 
@@ -160,4 +159,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_arguments()
+    main(
+        ip_addr=args.ip_addr,
+        domain=args.domain,
+        query=args.query,
+        device_query=args.device_query,
+        status=args.status
+    )
+    

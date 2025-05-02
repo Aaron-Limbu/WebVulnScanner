@@ -17,9 +17,10 @@ class Logger:
 
 class WhoisHandler:
     def __init__(self, url):
-        self.url = url
+        self.original_input = url
+        self.url = self.extract_domain(url)
         self.whois_data = None
-        if self.validate_url():
+        if self.url:
             try:
                 self.whois_data = whois.whois(self.url)
                 if not self.whois_data:
@@ -27,11 +28,11 @@ class WhoisHandler:
             except Exception as e:
                 logging.error(f"Failed to retrieve WHOIS data for {self.url}: {str(e)}")
         else:
-            logging.error(f"Invalid URL provided: {self.url}")
+            logging.error(f"Invalid input provided: {self.original_input}")
 
-    def validate_url(self):
-        parsed = urlparse(self.url)
-        return bool(parsed.netloc) and bool(parsed.scheme)
+    def extract_domain(self, url):
+        parsed = urlparse(url)
+        return parsed.netloc if parsed.netloc else url.strip()
 
     def get_whois_data(self):
         if self.whois_data:
