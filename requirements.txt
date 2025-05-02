@@ -14,4 +14,4 @@ flask-sqlalchemy
 customtkinter
 tabulate
 python-dotenv
-google
+googlesearch
