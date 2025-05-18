@@ -388,6 +388,72 @@ class Dash(ctk.CTk):
                     corner_radius=8, width=80
                 )
                 join_button.grid(row=9, column=1, sticky="e", padx=20, pady=(0, 12))
+                joined_programme_id = self.get_joined_programme_id()
+
+                if joined_programme_id == prog['id']:
+                    feedback_button = ctk.CTkButton(
+                        card, text="Report Feedback", font=("Segoe UI", 12, "bold"),
+                        command=self.open_feedback_form,
+                        fg_color="#66bb6a", hover_color="#4caf50", text_color="white",
+                        corner_radius=8, width=140
+                    )
+                    feedback_button.grid(row=10, column=1, sticky="e", padx=20, pady=(0, 12))
+
+    def get_joined_programme_id(self):
+        try:
+            with open("session.json", "r") as f:
+                data = json.load(f)
+                return data.get("joined_programme_id")
+        except:
+            return None
+
+    def join_programme(self, programme_id):
+        try:
+            with open("session.json", "r") as f:
+                session_data = json.load(f)
+        except FileNotFoundError:
+            session_data = {}
+
+        session_data['joined_programme_id'] = programme_id
+
+        with open("session.json", "w") as f:
+            json.dump(session_data, f)
+
+        ctk.CTkMessagebox.show_info("Joined", "Successfully joined the programme.")
+        self.show_programmes()  # Refresh UI to show feedback button
+
+    def open_feedback_form(self):
+        feedback_window = ctk.CTkToplevel(self)
+        feedback_window.title("Submit Feedback")
+        feedback_window.geometry("400x300")
+
+        ctk.CTkLabel(feedback_window, text="Your Feedback:", font=("Segoe UI", 14)).pack(pady=10)
+        feedback_entry = ctk.CTkTextbox(feedback_window, height=100)
+        feedback_entry.pack(padx=20, pady=10, fill="both", expand=True)
+
+        def submit_feedback():
+            comment = feedback_entry.get("1.0", "end").strip()
+            programme_id = self.get_joined_programme_id()
+            token = self.load_session()
+
+            if comment and programme_id:
+                try:
+                    res = requests.post(
+                        f"{APP_URL}/feedback",
+                        json={"programme_id": programme_id, "comment": comment},
+                        headers={"Authorization": token}
+                    )
+                    if res.status_code == 201:
+                        ctk.CTkMessagebox.show_info("Success", "Feedback submitted.")
+                        feedback_window.destroy()
+                    else:
+                        ctk.CTkMessagebox.show_error("Error", f"Submission failed: {res.text}")
+                except Exception as e:
+                    ctk.CTkMessagebox.show_error("Error", str(e))
+            else:
+                ctk.CTkMessagebox.show_warning("Missing", "Feedback cannot be empty.")
+
+        ctk.CTkButton(feedback_window, text="Submit", command=submit_feedback).pack(pady=10)
 
     def show_tools(self): 
         if self.content_frame: 
@@ -1947,7 +2013,6 @@ class BlueT(ctk.CTk):
             card.grid(row=i, column=0, padx=10, pady=10, sticky="ew")
             card.grid_columnconfigure(0, weight=1)
 
-                # Severity indicator
             sev_colors = {"High": "#ff4d4d", "Medium": "#ffaa00", "Low": "#44cc66"}
             color = sev_colors.get(vuln["severity"], "#999999")
 
@@ -1959,6 +2024,7 @@ class BlueT(ctk.CTk):
 
             ctk.CTkLabel(card, text="Fix Recommendation:", font=("Arial", 13, "bold"), text_color="white").grid(row=4, column=0, sticky="w", padx=10, pady=(8, 0))
             ctk.CTkLabel(card, text=vuln["fix"], font=("Arial", 13),wraplength=450, text_color="#88ccff",  justify="left").grid(row=5, column=0, sticky="w", padx=10, pady=(0, 10))
+
 
     def logout_action(self):
         try:
@@ -1990,6 +2056,178 @@ class BlueT(ctk.CTk):
         if os.path.exists(SESSION_FILE):
             os.remove(SESSION_FILE)
 
+
+class AdminDashboard(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("Admin Dashboard")
+        self.geometry("1000x600")
+        self.configure(fg_color="#1e1e1e")  # Dark background
+
+        self.token = self.load_token()
+
+        ctk.CTkLabel(
+            self,
+            text="Admin Dashboard",
+            font=("Segoe UI", 24, "bold"),
+            text_color="white"
+        ).pack(pady=15)
+
+        self.tabview = ctk.CTkTabview(self, height=520, fg_color="#1e1e1e")
+        self.tabview.pack(fill="both", expand=True, padx=20)
+
+        self.users_tab = self.tabview.add("Users")
+        self.programmes_tab = self.tabview.add("Programmes")
+        self.feedback_tab = self.tabview.add("Feedback")
+        self.scanresults_tab = self.tabview.add("Scan Results")
+
+        self.load_users()
+        self.load_programmes()
+        self.load_feedback()
+        self.load_scan_results()
+
+    def load_token(self):
+        try:
+            with open("session.json", "r") as f:
+                return json.load(f).get("token")
+        except:
+            return ""
+
+    def fetch_data(self, endpoint):
+        try:
+            res = requests.get(f"{APP_URL}/{endpoint}", headers={"Authorization": self.token})
+            if res.status_code == 200:
+                return res.json()
+            else:
+                print("Error:", res.text)
+                return []
+        except Exception as e:
+            print("Request failed:", e)
+            return []
+
+    def create_scrollable_frame(self, parent):
+        scroll_frame = ctk.CTkScrollableFrame(parent, fg_color="#1e1e1e", corner_radius=10)
+        scroll_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        return scroll_frame
+
+    def load_users(self):
+        frame = self.create_scrollable_frame(self.users_tab)
+        users = self.fetch_data("admin/users")
+        for user in users:
+            self.display_card(frame, {
+                "ID": user["id"],
+                "Username": user["username"],
+                "Email": user["email"],
+                "Role": user["role"]
+            })
+
+    def load_programmes(self):
+        frame = self.create_scrollable_frame(self.programmes_tab)
+
+        ctk.CTkLabel(frame, text="Add New Programme", font=("Segoe UI", 18, "bold"), text_color="white").pack(pady=10)
+
+        fields = {
+            "programme_name": "Programme Name",
+            "domain_name": "Domain Name",
+            "scope": "Scope",
+            "outofscope": "Out of Scope (optional)",
+            "start_date": "Start Date (YYYY-MM-DD)",
+            "end_date": "End Date (YYYY-MM-DD)"
+        }
+        entries = {}
+        for key, label_text in fields.items():
+            ctk.CTkLabel(frame, text=label_text, text_color="white").pack(anchor="w", padx=20, pady=(10, 0))
+            entry = ctk.CTkEntry(frame, width=700)
+            entry.pack(padx=20, pady=5)
+            entries[key] = entry
+
+        status_label = ctk.CTkLabel(frame, text="", text_color="white")
+        status_label.pack()
+
+        def submit_programme():
+            data = {
+                "programme_name": entries["programme_name"].get(),
+                "domain_name": entries["domain_name"].get(),
+                "scope": entries["scope"].get(),
+                "outofscope": entries["outofscope"].get(),
+                "start_date": entries["start_date"].get(),
+                "end_date": entries["end_date"].get(),
+            }
+
+            if not all(data[k] for k in ["programme_name", "domain_name", "scope", "start_date", "end_date"]):
+                status_label.configure(text="Please fill all required fields.", text_color="red")
+                return
+
+            try:
+                res = requests.post(
+                    f"{APP_URL}/addprogrammes",
+                    json=data,
+                    headers={"Authorization": self.token}
+                )
+                if res.status_code == 201:
+                    status_label.configure(text="Programme added successfully!", text_color="green")
+                    for entry in entries.values():
+                        entry.delete(0, "end")
+                    self.refresh_programmes_display(frame)
+                else:
+                    status_label.configure(text=f"Error: {res.json().get('error', 'Unknown')}", text_color="red")
+            except Exception as e:
+                status_label.configure(text=f"Request failed: {str(e)}", text_color="red")
+
+        ctk.CTkButton(frame, text="Submit", command=submit_programme).pack(pady=15)
+
+        ctk.CTkLabel(frame, text="Existing Programmes", font=("Segoe UI", 16, "bold"), text_color="white").pack(pady=10)
+
+        self.refresh_programmes_display(frame)
+    def refresh_programmes_display(self, parent_frame):
+        progs = self.fetch_data("admin/programmes")
+
+        for p in progs:
+            self.display_card(parent_frame, {
+                "ID": p["id"],
+                "Programme": p["programme_name"],
+                "Domain": p["domain_name"],
+                "Status": p["status"],
+                "Start Date": p["start_date"],
+                "End Date": p["end_date"]
+            })
+
+    def load_feedback(self):
+        frame = self.create_scrollable_frame(self.feedback_tab)
+        feedbacks = self.fetch_data("admin/feedback")
+        for f in feedbacks:
+            self.display_card(frame, {
+                "User ID": f["user_id"],
+                "Programme ID": f["programme_id"],
+                "Comment": f["comment"],
+                "Created At": f["created_at"]
+            })
+
+    def load_scan_results(self):
+        frame = self.create_scrollable_frame(self.scanresults_tab)
+        scans = self.fetch_data("admin/scanresults")
+        for s in scans:
+            self.display_card(frame, {
+                "Programme ID": s["programme_id"],
+                "Type": s["result_type"],
+                "Details": s["details"],
+                "Created At": s["created_at"]
+            })
+
+    def display_card(self, parent, data: dict):
+        card = ctk.CTkFrame(parent, fg_color="#2a2a2a", corner_radius=12)
+        card.pack(padx=10, pady=10, fill="x")
+
+        for key, val in data.items():
+            label = ctk.CTkLabel(
+                card,
+                text=f"{key}: {val}",
+                font=("Segoe UI", 13),
+                text_color="white"
+            )
+            label.pack(anchor="w", padx=15, pady=2)
+
+
 if __name__ == "__main__":      
     try:
         if not os.path.exists("session.json"):
@@ -2015,8 +2253,8 @@ if __name__ == "__main__":
                 app = BlueT()
             elif role == "pentester":
                 app = Dash()
-            # elif role == "admin":
-            #     app = AdminDashboard(token=token, role=role)
+            elif role == "admin":
+                app = AdminDashboard()
             else:
                 print("[!] Unrecognized role. Redirecting to Login.")
                 app = AuthApp()
