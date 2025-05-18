@@ -32,6 +32,7 @@ class WhoisHandler:
 
     def extract_domain(self, url):
         parsed = urlparse(url)
+        # If it's a full URL, extract netloc; else, treat it as a domain name directly
         return parsed.netloc if parsed.netloc else url.strip()
 
     def get_whois_data(self):
