@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify
 from flask_cors import CORS
-from models import db,bcrypt,Users, Programmes
+from models import db,bcrypt,Users, Programmes, Feedback, ScanResults
 import os 
 from dotenv import load_dotenv
 import secrets
@@ -164,6 +164,50 @@ def addprogramme():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Failed to add programme: {str(e)}"}), 500
+    
+
+@app.route("/admin/users", methods=["GET"])
+def get_users():
+    users = Users.query.all()
+    return jsonify([{
+        "id": u.id,
+        "username": u.username,
+        "email": u.email,
+        "role": u.role
+    } for u in users])
+
+@app.route("/admin/programmes", methods=["GET"])
+def get_programmes_admin():
+    progs = Programmes.query.all()
+    return jsonify([{
+        "id": p.id,
+        "programme_name": p.programme_name,
+        "domain_name": p.domain_name,
+        "status": p.status,
+        "start_date": p.start_date.strftime("%Y-%m-%d"),
+        "end_date": p.end_date.strftime("%Y-%m-%d")
+    } for p in progs])
+
+@app.route("/admin/feedback", methods=["GET"])
+def get_feedback():
+    fb = Feedback.query.all()
+    return jsonify([{
+        "user_id": f.user_id,
+        "programme_id": f.programme_id,
+        "comment": f.comment,
+        "created_at": f.created_at.strftime("%Y-%m-%d %H:%M")
+    } for f in fb])
+
+@app.route("/admin/scanresults", methods=["GET"])
+def get_scan_results():
+    scans = ScanResults.query.all()
+    return jsonify([{
+        "programme_id": s.programme_id,
+        "result_type": s.result_type,
+        "details": s.details,
+        "created_at": s.created_at.strftime("%Y-%m-%d %H:%M")
+    } for s in scans])
+
 if __name__ == "__main__": 
     try: 
         # os.system('cls')
