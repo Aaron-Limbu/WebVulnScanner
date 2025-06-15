@@ -5,12 +5,6 @@ dnspython
 python-nmap
 urllib3
 beautifulsoup4
-flask
-Flask-Bcrypt
-flask-cors
-flask-migrate
-flask-mysqldb
-flask-sqlalchemy
 customtkinter
 tabulate
 python-dotenv
