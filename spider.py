@@ -1,13 +1,15 @@
 import argparse
 import pyfiglet
-
+import requests
 import threading
 import os 
 import multiprocessing
+import random
+import requests.cookies
 
 
 class Spider():
-    def __init__(self,url,nssl,ip,sc,a,sm,o,pt):
+    def __init__(self,url,nssl,ip,sc,a,sm,o,pt,ua,wl):
         self.url = url 
         self.noSSL = nssl
         self.ipaddr = ip
@@ -16,6 +18,7 @@ class Spider():
         self.scanMethod = sm
         self.output = o
         self.port = pt 
+        self.wordlists = wl 
 
         self.foundRoutes = []
         self.foundLinks = []
@@ -23,29 +26,46 @@ class Spider():
         self.foundFiles = []
         self.httpResult = {} 
         self.sslResult = {}
-
-
+        self.cookie = {}
+        self.useragent = {
+            "User-Agent": ua if ua else random.choice([
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+                "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+            ]),
+            "Accept-Language": "en-US,en;q=0.9",
+        }
     def recon(self):
-        from reconnaissance.banner_grabber import BannerGrabber as BG
-        from reconnaissance.Header import SSLAnalysis as SL
-        from reconnaissance.Header import HTTPHeaderAnalysis as HG
-        bg = BG(self.url,self.port)
-        hg = HG(self.url)
-        bg_thread = threading.Thread(target=lambda:bg.grab_banner)
-        hg_thread = threading.Thread(target=lambda:hg.analyze_headers)
-        bg_thread.start()
-        bg_thread.join()
-        hg_thread.start()
-        self.httpResult = hg.httpresult
-        hg_thread.join()
-        if self.noSSL == False:
-            sl = SL(self.url)
-            sl_thread = threading.Thread(target=lambda:sl.analyze_ssl)
-            sl_thread.start()
-            self.sslResult = sl.sslresult
-            sl_thread.join()
-        else: 
-            print(f"[i] SSL check is off.")
+        try: 
+            from reconnaissance.banner_grabber import BannerGrabber as BG
+            from reconnaissance.Header import SSLAnalysis as SL
+            from reconnaissance.Header import HTTPHeaderAnalysis as HG
+            bg = BG(self.url,self.port)
+            hg = HG(self.url)
+            bg_thread = threading.Thread(target=lambda:bg.grab_banner)
+            hg_thread = threading.Thread(target=lambda:hg.analyze_headers)
+            bg_thread.start()
+            bg_thread.join()
+            hg_thread.start()
+            self.httpResult = hg.httpresult
+            hg_thread.join()
+            if self.noSSL == False:
+                sl = SL(self.url)
+                sl_thread = threading.Thread(target=lambda:sl.analyze_ssl)
+                sl_thread.start()
+                self.sslResult = sl.sslresult
+                sl_thread.join()
+            else: 
+                print(f"[i] SSL check is off.")
+
+            session = requests.Session()
+            resp = session.get(self.url)
+            self.cookie = resp.cookies.get_dict()
+            from reconnaissance.dir_enum import DirectoryEnum as DE
+            de = DE(self.url,self.wordlists,self.useragent,self.cookie,5)
+
+        except Exception as e: 
+            print(f"[-] Error: {e}")
 
 class DisplayInfo:
     def __init__(self, args):
@@ -54,7 +74,7 @@ class DisplayInfo:
     def show_arguments(self):
         print("\n[+] Spider scan")
         print(f"Target URL     : {self.args.url}")
-        print(f"No SSL Scan    : {self.args.nossl if self.args.nossl else 'Not specified'}")
+        print(f"No SSL Scan    : {self.args.nossl if self.args.nossl else 'SSL scan on'}")
         print(f"Target IP Addr : {self.args.ipaddr if self.args.ipaddr else 'Not specified'}")
         print(f"Scan Type      : {'Without Recon' if self.args.scan == 1 else 'With Recon' if self.args.scan == 2 else 'Default'}")
         print(f"Auto Mode      : {self.args.auto}")
