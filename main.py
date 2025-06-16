@@ -3,8 +3,8 @@ from tkinter import messagebox
 from dotenv import load_dotenv
 import requests
 import os
-import json
-import secrets
+# import json
+# import secrets
 
 load_dotenv()
 # Initialize main app
