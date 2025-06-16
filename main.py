@@ -648,7 +648,7 @@ class Dash(ctk.CTk):
             self.word_entry = ctk.CTkOptionMenu(self.box_frame,values=self.file_list,variable=self.word_var,width=300,height=40)
             self.word_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame, text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command=lambda: self.recon_scan(url=domain_entry.get(),port="88",useragent=None,cookies=None,threads=th_entry.get(),wordlists=word_entry.get(),n_result=10,output=None,input_list=None,tool="dns_enum"))  
+                                          command=lambda: self.recon_scan(url=domain_entry.get(),port="88",useragent=None,cookies=None,threads=th_entry.get(),wordlists=self.word_entry.get(),n_result=10,output=None,input_list=None,tool="dns_enum"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=4,columnspan=2,pady=(20,5))
@@ -805,7 +805,7 @@ class Dash(ctk.CTk):
             output_entry = ctk.CTkEntry(self.box_frame,width=300,font=("arial",16),height=40)
             output_entry.grid(row=2,column=1,padx=10,pady=10,sticky="w")
             submit_button = ctk.CTkButton(self.box_frame,text="Start Scan",font=("arial",20,"bold"),width=400, height=40,
-                                          command= lambda: self.recon_scan(url=domain_entry.get(),port=None,wordlists=word_entry.get(),useragent=None,cookies=None,threads=None,n_result=None,output=output_entry.get(),input_list=input_entry.get(),tool="web_status"))  
+                                          command= lambda: self.recon_scan(url=domain_entry.get(),port=None,wordlists=self.word_entry.get(),useragent=None,cookies=None,threads=None,n_result=None,output=output_entry.get(),input_list=input_entry.get(),tool="web_status"))  
             submit_button.grid(row=3, columnspan=2, pady=15)
             log_frame = ctk.CTkScrollableFrame(self.content_frame, width=500)
             log_frame.grid(row=6,columnspan=2,pady=(20,5))
