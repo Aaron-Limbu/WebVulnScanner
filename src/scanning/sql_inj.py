@@ -7,6 +7,7 @@ from statistics import mean
 import os
 import glob
 import pyfiglet
+import re
 
 class SQLScanner:
     def __init__(self, url, userAgent, sql_errors, method,cookie):
@@ -257,7 +258,7 @@ class SQLScanner:
                         print(f"[i] Database : {db}")
                         return True
 
-    def version_detection(db,payloads): 
+    def version_detection(self,db,payloads): 
         parsed_url = urlparse(self.url)
         query_params = parse_qs(parsed_url.query)
         version_pattern = r"([0-9]+(?:\.[0-9]+)+))"
@@ -267,7 +268,7 @@ class SQLScanner:
                 modified_params[param] = payload
                 modified_query = urlencode(modified_params,doseq=True)
                 full_url =f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}?{modified_query}"
-                response = request.get(full_url,header=self.headers)
+                response = requests.get(full_url,header=self.headers)
                 if response.status_code in [400, 403, 404, 502, 503, 505]:
                     print(f"[!] payload was sent but connection failed after it.")
                 if response.status_code == 200: 
@@ -278,7 +279,7 @@ class SQLScanner:
                     else: 
                         print(f"[-] Database version not found in response")
 
-    def db_info(db,payloads):
+    def db_info(self,db,payloads):
         parsed_url =urlparse(self.url)
         query_params = parse_qs(parsed_url.query)
         for param in query_params: 
