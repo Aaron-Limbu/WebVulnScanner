@@ -9,7 +9,7 @@ import requests.cookies
 
 
 class Spider():
-    def __init__(self,url,nssl,ip,sc,a,sm,o,pt,ua,wl):
+    def __init__(self,url,nssl,ip,sc,a,sm,o,pt,ua):
         self.url = url 
         self.noSSL = nssl
         self.ipaddr = ip
@@ -18,8 +18,7 @@ class Spider():
         self.scanMethod = sm
         self.output = o
         self.port = pt 
-        self.wordlists = wl 
-
+        self.wordlists = ""
         self.foundRoutes = []
         self.foundLinks = []
         self.foundDirectories = []
@@ -42,8 +41,8 @@ class Spider():
             from reconnaissance.Header import HTTPHeaderAnalysis as HG
             bg = BG(self.url,self.port)
             hg = HG(self.url)
-            bg_thread = threading.Thread(target=lambda:bg.grab_banner)
-            hg_thread = threading.Thread(target=lambda:hg.analyze_headers)
+            bg_thread = threading.Thread(target=bg.grab_banner)
+            hg_thread = threading.Thread(target=hg.analyze_headers)
             bg_thread.start()
             bg_thread.join()
             hg_thread.start()
@@ -51,7 +50,7 @@ class Spider():
             hg_thread.join()
             if self.noSSL == False:
                 sl = SL(self.url)
-                sl_thread = threading.Thread(target=lambda:sl.analyze_ssl)
+                sl_thread = threading.Thread(target=sl.analyze_ssl)
                 sl_thread.start()
                 self.sslResult = sl.sslresult
                 sl_thread.join()
@@ -61,9 +60,10 @@ class Spider():
             session = requests.Session()
             resp = session.get(self.url)
             self.cookie = resp.cookies.get_dict()
-            from reconnaissance.dir_enum import DirectoryEnum as DE
+            from reconnaissance.dir_enum import Application as DE
+            self.wordlists = os.path.join(os.getcwd,"data","wordlists","directory_enumeration.txt")
             de = DE(self.url,self.wordlists,self.useragent,self.cookie,5)
-
+            de_thread = threading.Thread(target=de.run)
         except Exception as e: 
             print(f"[-] Error: {e}")
 
@@ -91,7 +91,7 @@ class CLI:
     def parse_arguments():
         parser = argparse.ArgumentParser(formatter_class=CustomHelpFormatter)
         parser.add_argument("-u", "--url", type=str, required=True, help="Target URL (example:- https://example.com)")
-        parser.add_argument("-nssl", "--nossl", type=str, required=False, help="No SSL scan")
+        parser.add_argument("-nssl", "--nossl", type=str, required=False,choices=["true","false"], help="No SSL scan")
         parser.add_argument("-ip", "--ipaddr", type=str, required=False, help="Target IP address (example:- 10.10.10.10)")
         parser.add_argument("-sc", "--scan", type=int, required=False, default=0, choices=[1, 2],
                             help="1. Scan without recon\n2. Scan with Recon (will scan all domains)")
@@ -102,7 +102,7 @@ class CLI:
                                  "5. CSRF\n6. IDOR\n7. LFI\n8. NMAP\n9. SQLi\n10. SSRF\n11. XEE\n12. XSS")
         parser.add_argument("-p","--port",type=str,required=False,default="80,443",help="example: -p 80,443")
         parser.add_argument("-o","--output",type=str,required=False,help="-o output.txt")
-
+        parser.add_argument("-ua","--useragent",type=str,required=False,help="example: -ua \"Mozilla blah blah blah bleh bleh blu blu blu\"")
         return parser.parse_args()
 
 if __name__ == "__main__":
