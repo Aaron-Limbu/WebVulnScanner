@@ -38,8 +38,7 @@ class BannerGrabber:
     def run(self):
         try:
             # log_path = f"{os.getcwd()}\\logs\\banner_grabber.log"  
-            # Logger.setup_logger("banner.log")  
-
+            Logger.setup_logger("banner.log")  
             ip = socket.gethostbyname(self.target)
             print(f"[+] Target resolved to IP: {ip}")
             print("[+] Starting banner grabbing...")
