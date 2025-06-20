@@ -60,10 +60,14 @@ class Spider():
             session = requests.Session()
             resp = session.get(self.url)
             self.cookie = resp.cookies.get_dict()
-            from reconnaissance.dir_enum import Application as DE
+            from reconnaissance.dir_enum import DirectoryEnum as DE
             self.wordlists = os.path.join(os.getcwd,"data","wordlists","directory_enumeration.txt")
             de = DE(self.url,self.wordlists,self.useragent,self.cookie,5)
-            de_thread = threading.Thread(target=de.run)
+            de_thread = threading.Thread(target=de.enum)
+            de_thread.start()
+            de_thread.join()
+            self.foundDirectories = de.found_dir
+            
         except Exception as e: 
             print(f"[-] Error: {e}")
 
