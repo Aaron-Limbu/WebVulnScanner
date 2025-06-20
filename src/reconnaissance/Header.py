@@ -7,6 +7,7 @@ from datetime import datetime
 class HTTPHeaderAnalysis:
     def __init__(self, url):
         self.url = url
+        self.httpresult = {}
 
     def analyze_headers(self):
         print(f"[+] Analyzing HTTP headers for {self.url}...")
@@ -32,16 +33,19 @@ class HTTPHeaderAnalysis:
             for header, description in security_headers.items():
                 if header in headers:
                     print(f"    [+] {header}: Present ({description})")
+                    self.httpresult.update({header:"Present"})
                 else:
                     print(f"    [-] {header}: Missing ({description})")
-
+                    self.httpresult.update({header:"Missing"})
         except requests.exceptions.RequestException as e:
             print(f"[-] Error fetching HTTP headers: {e}")
+
 
 
 class SSLAnalysis:
     def __init__(self, hostname):
         self.hostname = hostname
+        self.sslresult = {}
 
     def analyze_ssl(self):
         print(f"\n[+] Analyzing SSL/TLS for {self.hostname}...")
@@ -51,22 +55,38 @@ class SSLAnalysis:
                 with context.wrap_socket(sock, server_hostname=self.hostname) as ssock:
                     cert = ssock.getpeercert()
 
-                    print("\n[+] SSL Certificate Details:")
-                    print(f"    Subject: {cert.get('subject')}")
-                    print(f"    Issuer: {cert.get('issuer')}")
+                    subject = cert.get('subject')
+                    issuer = cert.get('issuer')
                     valid_from = datetime.strptime(cert.get('notBefore'), '%b %d %H:%M:%S %Y %Z')
                     valid_to = datetime.strptime(cert.get('notAfter'), '%b %d %H:%M:%S %Y %Z')
+
+                    print("\n[+] SSL Certificate Details:")
+                    print(f"    Subject: {subject}")
+                    print(f"    Issuer: {issuer}")
                     print(f"    Valid From: {valid_from}")
                     print(f"    Valid To: {valid_to}")
 
-                    if valid_to < datetime.utcnow():
+                    is_expired = valid_to < datetime.utcnow()
+
+                    if is_expired:
                         print("    [-] Certificate has expired!")
                     else:
                         print("    [+] Certificate is valid.")
 
+                    # Store in result dictionary
+                    self.sslresult = {
+                        "subject": subject,
+                        "issuer": issuer,
+                        "valid_from": str(valid_from),
+                        "valid_to": str(valid_to),
+                        "expired": is_expired
+                    }
+
         except (ssl.SSLError, socket.error) as e:
             print(f"[-] SSL/TLS analysis failed: {e}")
-
+            self.sslresult = {
+                "error": str(e)
+            }
 
 class Application:
     def __init__(self, url):
