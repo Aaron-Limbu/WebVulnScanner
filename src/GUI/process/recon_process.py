@@ -9,7 +9,6 @@ import multiprocessing
     _setup_output_redirection redirects the print() content to the GUI
 """
 import os
-import multiprocessing
 
 class ReconProcess:
     def __init__(self, url, port, useragent, cookie, thread, wordlists, input_list, n, output_file, log_update_callback, filename):
