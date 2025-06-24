@@ -9,7 +9,7 @@ import requests.cookies
 
 
 class Spider():
-    def __init__(self,url,nssl,ip,sc,a,sm,o,pt,ua):
+    def __init__(self,url,nssl,ip,sc,a,sm,o,pt,ua,c):
         self.url = url 
         self.noSSL = True if nssl and nssl.lower() == "true" else False
         self.ipaddr = ip
@@ -26,7 +26,7 @@ class Spider():
         self.bannerResult = ""
         self.httpResult = {} 
         self.sslResult = {}
-        self.cookie = {}
+        self.cookie = c
         self.useragent = {
             "User-Agent": ua if ua else random.choice([
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
@@ -145,6 +145,7 @@ class CustomHelpFormatter(argparse.RawTextHelpFormatter):
     def add_usage(self, usage, actions, groups, prefix=None):
         banner = pyfiglet.figlet_format("SPIDER SCAN", font="slant")
         print(banner)
+        print("Written By: Escalon")
         return super().add_usage(usage, actions, groups, prefix)
 
 class CLI:
@@ -154,6 +155,10 @@ class CLI:
         parser.add_argument("-u", "--url", type=str, required=True, help="Target URL (example:- https://example.com)")
         parser.add_argument("-nssl", "--nossl", type=str, required=False,choices=["true","false"], help="No SSL scan")
         parser.add_argument("-ip", "--ipaddr", type=str, required=False, help="Target IP address (example:- 10.10.10.10)")
+        parser.add_argument("-p","--port",type=str,required=False,default="80,443",help="example: -p 80,443")
+        parser.add_argument("-ua","--useragent",type=str,required=False,help="example: -ua \"Mozilla blah blah blah bleh bleh blu blu blu\"")
+        parser.add_argument("-c","--cookie",type=str,required=False,help="-c \"PHPSESSID: 23asd23231sdadsa\"")
+        parser.add_argument("-t","--threads",type=int,required=False,default=3,help="--threads 10")
         parser.add_argument("-sc", "--scan", type=int, required=False, default=0, choices=[1, 2],
                             help="1. Scan without recon\n2. Scan with Recon (will scan all domains)")
         parser.add_argument("-a", "--auto", action='store_true', help="Enable auto mode")
@@ -161,9 +166,9 @@ class CLI:
                             choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
                             help="1. API Auth scan\n2. API Test scan\n3. Bruteforce scan\n4. Command Injection\n"
                                  "5. CSRF\n6. IDOR\n7. LFI\n8. NMAP\n9. SQLi\n10. SSRF\n11. XEE\n12. XSS")
-        parser.add_argument("-p","--port",type=str,required=False,default="80,443",help="example: -p 80,443")
+
         parser.add_argument("-o","--output",type=str,required=False,help="-o output.txt")
-        parser.add_argument("-ua","--useragent",type=str,required=False,help="example: -ua \"Mozilla blah blah blah bleh bleh blu blu blu\"")
+        
         return parser.parse_args()
 
 if __name__ == "__main__":
