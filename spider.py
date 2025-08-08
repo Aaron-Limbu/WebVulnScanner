@@ -18,7 +18,7 @@ class Spider():
         self.auto = a
         self.scanMethod = sm
         self.output = o
-        self.port = pt
+        self.ports = [int(pt.strip()) for pt in pt.split(",")]
         self.wordlists = ""
         self.foundRoutes = []
         self.foundLinks = []
@@ -42,6 +42,7 @@ class Spider():
         self.username = ""
         self.password = ""
         self.session = ""
+        
 
     def _load_modules(self,package_name): 
         package = importlib.import_module(package_name)
@@ -49,30 +50,35 @@ class Spider():
             name = f"{package_name}.{module_name}"
             yield importlib.import_module(name)
 
-    def _run_module_class(self,module): 
+    def _run_module_class(self,module,is_recon=False): 
+        ip_based = {"Gdork","dns_enum","shodan_enum","wbScrapper","who_is"} ##skiping for local testing
         for name,obj in inspect.getmembers(module,inspect.isclass):
             if obj.__module__ == module.__name__: 
-                try: 
-                    sig = inspect.signature(obj.__init__)
-                    init_args = {
-                        k: getattr(self,k)
-                        for k in sig.parameters if k != 'self' and hasattr(self,k)
-                    }
-                    instance = obj(**init_args)
-                    method = getattr(instance,'run',None)
-                    if callable(method): 
-                        print(f"[i] Running: {obj.__name__}")
-                        method()
-                except Exception as e :
-                    print(f"[-] Failed to run {obj.__name__}: {e}")
+                if obj.__name__ in ip_based: 
+                    try: 
+                        sig = inspect.signature(obj.__init__)
+                        init_args = {
+                            k: getattr(self,k)
+                            for k in sig.parameters if k != 'self' and hasattr(self,k)
+                        }
+                        instance = obj(**init_args)
+                        method = getattr(instance,'run',None)
+                        if callable(method): 
+                            print(f"[i] Running: {obj.__name__}")
+                            result = method()
+                            if is_recon and result: 
+                                self.findings[obj.__name__] = result
+
+                    except Exception as e :
+                        print(f"[-] Failed to run {obj.__name__}: {e}")
 
 
     def recon(self):
         try:
             print(f"[i] Running Recon on {self.url}")
             for mod in self._load_modules('src.reconnaissance'): 
-                self._run_module_class(mod,is_recon = True)
-                
+                self._run_module_class(mod,is_recon=True)
+
         except requests.exceptions.RequestException as re:
             print(f"[-] Request Error: {re}")
         except Exception as e:
@@ -193,7 +199,7 @@ class CLI:
     @staticmethod
     def parse_arguments():
         parser = argparse.ArgumentParser(formatter_class=CustomHelpFormatter)
-        parser.add_argument("-u", "--url", type=str, required=True, help="Target URL (example: https://example.com)")
+        parser.add_argument("-u", "--url", type=str, help="Target URL (example: https://example.com)")
         parser.add_argument("-nssl", "--nossl", type=str, choices=["true", "false"], help="Disable SSL scan")
         parser.add_argument("-ip", "--ipaddr", type=str, help="Target IP address")
         parser.add_argument("-p", "--port", type=str, default="80,443", help="Ports to scan (default: 80,443)")
