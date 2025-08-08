@@ -6,7 +6,8 @@ import os
 import random
 import importlib
 import requests.cookies
-
+import inspect
+import pkgutil
 
 class Spider():
     def __init__(self, url, nssl, ip, sc, a, sm, o, pt, ua, c):
@@ -37,45 +38,41 @@ class Spider():
             "Accept-Language": "en-US,en;q=0.9",
         }
 
+
+        self.username = ""
+        self.password = ""
+        self.session = ""
+
+    def _load_modules(self,package_name): 
+        package = importlib.import_module(package_name)
+        for loader, module_name, is_pkg in pkgutil.iter_modules(package.__path__): 
+            name = f"{package_name}.{module_name}"
+            yield importlib.import_module(name)
+
+    def _run_module_class(self,module): 
+        for name,obj in inspect.getmembers(module,inspect.isclass):
+            if obj.__module__ == module.__name__: 
+                try: 
+                    sig = inspect.signature(obj.__init__)
+                    init_args = {
+                        k: getattr(self,k)
+                        for k in sig.parameters if k != 'self' and hasattr(self,k)
+                    }
+                    instance = obj(**init_args)
+                    method = getattr(instance,'run',None)
+                    if callable(method): 
+                        print(f"[i] Running: {obj.__name__}")
+                        method()
+                except Exception as e :
+                    print(f"[-] Failed to run {obj.__name__}: {e}")
+
+
     def recon(self):
         try:
-            from reconnaissance.banner_grabber import BannerGrabber as BG
-            from reconnaissance.Header import SSLAnalysis as SL
-            from reconnaissance.Header import HTTPHeaderAnalysis as HG
-            from reconnaissance.dir_enum import DirectoryEnum as DE
-            bg = BG(self.ipaddr, self.port)
-            hg = HG(self.url)
-            bg_thread = threading.Thread(target=bg.grab_banner)
-            hg_thread = threading.Thread(target=hg.analyze_headers)
-            bg_thread.start()
-            bg_thread.join()
-            hg_thread.start()
-            hg_thread.join()
-            self.httpResult = hg.httpresult
-            if not self.noSSL:
-                sl = SL(self.url)
-                sl_thread = threading.Thread(target=sl.analyze_ssl)
-                sl_thread.start()
-                sl_thread.join()
-                self.sslResult = sl.sslresult
-            else:
-                print("[i] SSL check is off.")
-            session = requests.Session()
-            resp = session.get(self.url)
-            self.cookie = resp.cookies.get_dict()
-            self.wordlists = os.path.join("data", "wordlists", "directory_enumeration", "directory_list_medium.txt")
-            de = DE(self.url, self.wordlists, self.useragent, self.cookie, 5)
-            de_thread = threading.Thread(target=de.enum)
-            de_thread.start()
-            de_thread.join()
-            self.foundDirectories = de.found_dir
-            self.wordlists = os.path.join("data", "wordlists", "fileEnum", "fileEnum.txt")
-            fe = DE(self.url, self.wordlists, self.useragent, self.cookie, 5)
-            fe_thread = threading.Thread(target=fe.enum)
-            fe_thread.start()
-            fe_thread.join()
-            self.foundFiles = fe.found_dir
-
+            print(f"[i] Running Recon on {self.url}")
+            for mod in self._load_modules('src.reconnaissance'): 
+                self._run_module_class(mod,is_recon = True)
+                
         except requests.exceptions.RequestException as re:
             print(f"[-] Request Error: {re}")
         except Exception as e:
@@ -104,11 +101,17 @@ class Spider():
             return
 
         try:
-            scan_module = importlib.import_module(f"vuln_scans.{module_name}")
-            if hasattr(scan_module, "run"):
-                scan_module.run(self.url, self.useragent, self.cookie)
-            else:
-                print(f"[-] Module {module_name} has no run() function.")
+            scan_module = importlib.import_module(f"src.scanning.{module_name}")
+            if not hasattr(scan_module,"run"):
+                print(f"[-] Module '{module_name}' does not have a 'run()' function")
+                return
+            run_scan = scan_module.run
+            sig = inspect.signature(run_scan)
+            args_to_pass = {}
+            for param in sig.parameters.values(): 
+                if hasattr(self,param.name): 
+                    args_to_pass[param.name] = getattr(self,param.name)
+
         except ImportError as e:
             print(f"[-] Failed to import module {module_name}: {e}")
         except Exception as e:
