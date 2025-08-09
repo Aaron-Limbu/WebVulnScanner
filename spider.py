@@ -69,14 +69,14 @@ class Spider():
                     instance = obj(**init_args)
                     method = getattr(instance,'run',None)
                     base = getattr(instance,'base',None)
-                    if callable(method): 
+                    if callable(method) and callable(base): 
                         print(f"[i] Running: {obj.__name__}")
                         result = method()
                         if is_recon and result: 
                             self.findings[obj.__name__] = result
-                    elif callable(base): 
+                    elif callable(method): 
                         print(f"[i] Running: {obj.__name__}")
-                        result = base()
+                        result = method()
                         if is_recon and result: 
                             self.findings[obj.__name__] = result
                     else : 
