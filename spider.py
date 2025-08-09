@@ -45,37 +45,50 @@ class Spider():
         
 
     def _load_modules(self,package_name): 
+        ip_based = {"Gdork","dns_enum","shodan_recon","wbScrapper","who_is","sub_dom_enum"} ##skiping for local testing
         package = importlib.import_module(package_name)
+        print(f"[i] Local scanning, excluded modules: {ip_based}")
         for loader, module_name, is_pkg in pkgutil.iter_modules(package.__path__): 
-            name = f"{package_name}.{module_name}"
-            yield importlib.import_module(name)
+            if self.ipaddr != "": 
+                if module_name in ip_based:
+                    print(f"[i] Skipping module: {module_name}")
+                    continue
+                else : 
+                    name = f"{package_name}.{module_name}"
+                    yield importlib.import_module(name)
 
     def _run_module_class(self,module,is_recon=False): 
-        ip_based = {"Gdork","dns_enum","shodan_enum","wbScrapper","who_is"} ##skiping for local testing
         for name,obj in inspect.getmembers(module,inspect.isclass):
             if obj.__module__ == module.__name__: 
-                if obj.__name__ in ip_based: 
-                    try: 
-                        sig = inspect.signature(obj.__init__)
-                        init_args = {
-                            k: getattr(self,k)
-                            for k in sig.parameters if k != 'self' and hasattr(self,k)
-                        }
-                        instance = obj(**init_args)
-                        method = getattr(instance,'run',None)
-                        if callable(method): 
-                            print(f"[i] Running: {obj.__name__}")
-                            result = method()
-                            if is_recon and result: 
-                                self.findings[obj.__name__] = result
-
-                    except Exception as e :
-                        print(f"[-] Failed to run {obj.__name__}: {e}")
+                try: 
+                    sig = inspect.signature(obj.__init__)
+                    init_args = {
+                        k: getattr(self,k)
+                        for k in sig.parameters if k != 'self' and hasattr(self,k)
+                    }
+                    instance = obj(**init_args)
+                    method = getattr(instance,'run',None)
+                    base = getattr(instance,'base',None)
+                    if callable(method): 
+                        print(f"[i] Running: {obj.__name__}")
+                        result = method()
+                        if is_recon and result: 
+                            self.findings[obj.__name__] = result
+                    elif callable(base): 
+                        print(f"[i] Running: {obj.__name__}")
+                        result = base()
+                        if is_recon and result: 
+                            self.findings[obj.__name__] = result
+                    else : 
+                        print(f"[-] No callable method found")
+                    
+                except Exception as e :
+                    print(f"[-] Failed to run {obj.__name__}: {e}")
 
 
     def recon(self):
         try:
-            print(f"[i] Running Recon on {self.url}")
+            print(f"[i] Running Recon ..")
             for mod in self._load_modules('src.reconnaissance'): 
                 self._run_module_class(mod,is_recon=True)
 
@@ -200,7 +213,7 @@ class CLI:
     def parse_arguments():
         parser = argparse.ArgumentParser(formatter_class=CustomHelpFormatter)
         parser.add_argument("-u", "--url", type=str, help="Target URL (example: https://example.com)")
-        parser.add_argument("-nssl", "--nossl", type=str, choices=["true", "false"], help="Disable SSL scan")
+        parser.add_argument("-nssl", "--nossl", type=str, default="false",choices=["true", "false"], help="Disable SSL scan")
         parser.add_argument("-ip", "--ipaddr", type=str, help="Target IP address")
         parser.add_argument("-p", "--port", type=str, default="80,443", help="Ports to scan (default: 80,443)")
         parser.add_argument("-ua", "--useragent", type=str, help="Custom User-Agent")
