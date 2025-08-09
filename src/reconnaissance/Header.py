@@ -43,8 +43,8 @@ class HTTPHeaderAnalysis:
 
 
 class SSLAnalysis:
-    def __init__(self, hostname):
-        self.hostname = hostname
+    def __init__(self, url):
+        self.hostname = url
         self.sslresult = {}
 
     def analyze_ssl(self):
@@ -102,6 +102,8 @@ class Application:
         ssl_analysis = SSLAnalysis(self.hostname)
         ssl_analysis.analyze_ssl()
 
+    def base(self):
+        return self 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="HTTP Header and SSL Analysis Tool")
